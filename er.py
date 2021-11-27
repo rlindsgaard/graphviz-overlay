@@ -17,7 +17,12 @@ def main(opts):
         model = json.load(f)
     dot = graphviz.Graph()
 
-    add_graph(dot, model, model.get('styles', {}))
+    styles = model.get('styles', {})
+    if opts.domain:
+        for domain in opts.domain.split('.'):
+            model = model['domains'][domain]
+
+    add_graph(dot, model, styles)
 
     print(dot.source)
 
@@ -29,28 +34,25 @@ def add_graph(g, model, styles):
             attrs[attr_name] = model[attr_name]
     g.attr('graph', **attrs)
 
-    add_domains(g, model.get('domains', []), styles)
+    add_domains(g, model.get('domains', {}), styles)
     add_entity_relationships(g, model, styles)
 
 
 def add_domains(g, domains, styles):
-    for i, domain in enumerate(domains):
-        add_domain(g, domain, i, styles)
+    for label, domain in domains.items():
+        add_domain(g, label, domain, styles)
 
 
-def add_domain(g, domain, idx, styles):
+def add_domain(g, label, domain, styles):
     name = domain.get('name', '')
-    graphname = f'cluster_{label_to_nodename(name)}'
-
-    if not name:
-        graphname = f'cluster_{idx}'
+    graphname = f'cluster_{label_to_nodename(label)}'
 
     domain_styles = styles.copy()
     domain_styles.update(domain.get('styles', {}))
 
     with g.subgraph(name=graphname) as c:
         c.attr(label=name)
-        add_domains(c, domain.get('domains', []), domain_styles)
+        add_domains(c, domain.get('domains', {}), domain_styles)
         add_entity_relationships(c, domain, domain_styles)
 
 
@@ -180,6 +182,9 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument(
         '-i', '--infile',
-        help='Input json file'
+        help='Input json file',
+    )
+    parser.add_argument('-d', '--domain',
+        help='Domain to output',
     )
     main(parser.parse_args())
