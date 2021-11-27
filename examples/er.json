@@ -1,39 +1,27 @@
 {
-    "entities": [
-        {
+    "entities": {
+        "course": {
             "name": "course",
-            "attributes": [
-                {
-                    "name": "name"
-                },
-                {
-                    "name": "code"
-                }
-            ]
+            "attributes": {
+                "name": {},
+                "code": {}
+            }
         },
-        {
+        "institute": {
             "name": "institute",
-            "attributes": [
-                {
-                    "name": "name"
-                }
-            ]
+            "attributes": {
+                "name": {}
+            }
         },
-        {
+        "student": {
             "name": "student",
-            "attributes": [
-                {
-                    "name": "name"
-                },
-                {
-                    "name": "number"
-                },
-                {
-                    "name": "grade"
-                }
-            ]
+            "attributes": {
+                "name": {},
+                "number": {},
+                "grade": {}
+            }
         }
-    ],
+    },
     "relationships": [
         {
             "source": {

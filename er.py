@@ -39,31 +39,30 @@ def add_graph(g, model, styles):
 
 
 def add_domains(g, domains, styles):
-    for label, domain in domains.items():
+    for name, domain in domains.items():
         add_domain(g, label, domain, styles)
 
 
-def add_domain(g, label, domain, styles):
-    name = domain.get('name', '')
-    graphname = f'cluster_{label_to_nodename(label)}'
+def add_domain(g, name, domain, styles):
+    graphname = f'cluster_{name}'
 
     domain_styles = styles.copy()
     domain_styles.update(domain.get('styles', {}))
 
     with g.subgraph(name=graphname) as c:
-        c.attr(label=name)
+        c.attr(label=domain.get('label', ''))
         add_domains(c, domain.get('domains', {}), domain_styles)
         add_entity_relationships(c, domain, domain_styles)
 
 
 def add_entity_relationships(g, model, styles):
-    add_entities(g, model.get('entities', []), styles)
+    add_entities(g, model.get('entities', {}), styles)
     add_relationships(g, model.get('relationships', []), styles)
 
 
 def add_entities(g, entities, styles):
-    for node in entities:
-        add_entity(g, node, styles)
+    for name, entity in entities.items():
+        add_entity(g, name, entity, styles)
 
 
 def add_relationships(g, relationships, styles):
@@ -71,38 +70,41 @@ def add_relationships(g, relationships, styles):
         add_relationship(g, relationship, styles)
 
 
-def add_entity(g, entity, styles):
+def add_entity(g, name, entity, styles):
     add_node(
         g,
-        label_to_nodename(entity['name']),
-        entity['name'],
+        name,
         **styles.get('entity', {
             'shape': 'box',
         }))
     add_entity_attributes(
         g,
+        name,
         entity,
         styles,
     )
 
 
-def add_entity_attributes(g, entity, styles):
-    for attribute in entity.get('attributes', []):
-        add_entity_attribute(g, entity, attribute, styles)
+def add_entity_attributes(g, entity_name, entity, styles):
+    for attribute_name, attribute in entity.get('attributes', {}).items():
+        add_entity_attribute(g, entity_name, attribute_name, attribute, styles)
 
 
-def add_entity_attribute(g, entity, attribute, styles):
-    node_name = labels_to_nodename(entity['name'], attribute['name'])
+def add_entity_attribute(g, entity_name, attribute_name, attribute, styles):
+    node_name = labels_to_nodename(entity_name, attribute_name)
+    attrs = styles.get('attribute', {}).copy()
+    attrs.update({
+        'label': attribute_name,
+    })
     add_node(
         g,
         node_name,
-        attribute['name'],
-        **styles.get('attribute', {})
+        **attrs
     )
     add_edge(
         g,
         node_name,
-        entity['name'],
+        entity_name,
     )
 
 
@@ -113,16 +115,18 @@ def add_relationship(g, relationship, styles):
             relationship['source']['name'].upper()[0],
             relationship['target']['name'].upper()[0],
         ]))
-
+    attrs = styles.get('relationship', {
+        "shape": "diamond",
+        "style": "filled",
+        "color": "lightgrey",
+    }).copy()
+    attrs.update({
+        'label': label,
+    })
     add_node(
         g,
         connectorid(relationship),
-        label,
-        **styles.get('relationship', {
-            "shape": "diamond",
-            "style": "filled",
-            "color": "lightgrey",
-        })
+        **attrs
     )
     add_cardinality(g, relationship, styles)
 
@@ -159,19 +163,18 @@ def connectorid(relationship):
     )
 
 
-def add_node(g, node_id, label, **kwargs):
-    args = {
-        'label': label,
-    }
-    args.update(kwargs)
+def add_node(g, name, **kwargs):
     g.node(
-        node_id,
-        **args
+        name,
+        **kwargs
     )
 
 
 def labels_to_nodename(*labels):
-    return '_'.join(label_to_nodename(l) for l in labels)
+    return '_'.join(
+        label_to_nodename(label)
+        for label in labels
+    )
 
 
 def label_to_nodename(label):
@@ -184,7 +187,8 @@ if __name__ == '__main__':
         '-i', '--infile',
         help='Input json file',
     )
-    parser.add_argument('-d', '--domain',
+    parser.add_argument(
+        '-d', '--domain',
         help='Domain to output',
     )
     main(parser.parse_args())
