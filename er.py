@@ -9,7 +9,180 @@ from argparse import ArgumentParser
 import graphviz
 import json
 
-graph_attrs = ["layout"]
+valid_attrs = [
+    '_background',
+    'area',
+    'arrowhead',
+    'arrowsize',
+    'arrowtail',
+    'bb',
+    'bgcolor',
+    'center',
+    'charset',
+    'class',
+    'clusterrank',
+    'color',
+    'colorscheme',
+    'comment',
+    'compound',
+    'concentrate',
+    'constraint',
+    'Damping',
+    'decorate',
+    'defaultdist',
+    'dim',
+    'dimen',
+    'dir',
+    'diredgeconstraints',
+    'distortion',
+    'dpi',
+    'edgehref',
+    'edgetarget',
+    'edgetooltip',
+    'edgeURL',
+    'epsilon',
+    'esep',
+    'fillcolor',
+    'fixedsize',
+    'fontcolor',
+    'fontname',
+    'fontnames',
+    'fontpath',
+    'fontsize',
+    'forcelabels',
+    'gradientangle',
+    'group',
+    'head_lp',
+    'headclip',
+    'headhref',
+    'headlabel',
+    'headport',
+    'headtarget',
+    'headtooltip',
+    'headURL',
+    'height',
+    'href',
+    'id',
+    'image',
+    'imagepath',
+    'imagepos',
+    'imagescale',
+    'inputscale',
+    'K',
+    'label',
+    'label_scheme',
+    'labelangle',
+    'labeldistance',
+    'labelfloat',
+    'labelfontcolor',
+    'labelfontname',
+    'labelfontsize',
+    'labelhref',
+    'labeljust',
+    'labelloc',
+    'labeltarget',
+    'labeltooltip',
+    'labelURL',
+    'landscape',
+    'layer',
+    'layerlistsep',
+    'layers',
+    'layerselect',
+    'layersep',
+    'layout',
+    'len',
+    'levels',
+    'levelsgap',
+    'lhead',
+    'lheight',
+    'lp',
+    'ltail',
+    'lwidth',
+    'margin',
+    'maxiter',
+    'mclimit',
+    'mindist',
+    'minlen',
+    'mode',
+    'model',
+    'mosek',
+    'newrank',
+    'nodesep',
+    'nojustify',
+    'normalize',
+    'notranslate',
+    'nslimit',
+    'nslimit1',
+    'ordering',
+    'orientation',
+    'outputorder',
+    'overlap',
+    'overlap_scaling',
+    'overlap_shrink',
+    'pack',
+    'packmode',
+    'pad',
+    'page',
+    'pagedir',
+    'pencolor',
+    'penwidth',
+    'peripheries',
+    'pin',
+    'pos',
+    'quadtree',
+    'quantum',
+    'rank',
+    'rankdir',
+    'ranksep',
+    'ratio',
+    'rects',
+    'regular',
+    'remincross',
+    'repulsiveforce',
+    'resolution',
+    'root',
+    'rotate',
+    'rotation',
+    'samehead',
+    'sametail',
+    'samplepoints',
+    'scale',
+    'searchsize',
+    'sep',
+    'shape',
+    'shapefile',
+    'showboxes',
+    'sides',
+    'size',
+    'skew',
+    'smoothing',
+    'sortv',
+    'splines',
+    'start',
+    'style',
+    'stylesheet',
+    'tail_lp',
+    'tailclip',
+    'tailhref',
+    'taillabel',
+    'tailport',
+    'tailtarget',
+    'tailtooltip',
+    'tailURL',
+    'target',
+    'tooltip',
+    'truecolor',
+    'URL',
+    'vertices',
+    'viewport',
+    'voro_margin',
+    'weight',
+    'width',
+    'xdotversion',
+    'xlabel',
+    'xlp',
+    'z',
+]
 
 
 def main(opts):
@@ -28,10 +201,8 @@ def main(opts):
 
 
 def add_graph(g, model, styles):
-    attrs = {}
-    for attr_name in graph_attrs:
-        if attr_name in model:
-            attrs[attr_name] = model[attr_name]
+    attrs = styles.get('graph', {})
+    attrs.update(attrs_for('graph', model))
     g.attr('graph', **attrs)
 
     add_domains(g, model.get('domains', {}), styles)
@@ -40,7 +211,7 @@ def add_graph(g, model, styles):
 
 def add_domains(g, domains, styles):
     for name, domain in domains.items():
-        add_domain(g, label, domain, styles)
+        add_domain(g, name, domain, styles)
 
 
 def add_domain(g, name, domain, styles):
@@ -50,7 +221,7 @@ def add_domain(g, name, domain, styles):
     domain_styles.update(domain.get('styles', {}))
 
     with g.subgraph(name=graphname) as c:
-        c.attr(label=domain.get('label', ''))
+        c.attr(**attrs_for('graph', domain))
         add_domains(c, domain.get('domains', {}), domain_styles)
         add_entity_relationships(c, domain, domain_styles)
 
@@ -71,12 +242,18 @@ def add_relationships(g, relationships, styles):
 
 
 def add_entity(g, name, entity, styles):
+    attrs = styles.get(
+        'entity',
+        {
+            'shape': 'box',
+        }
+    ).copy()
+    attrs.update(attrs_for('node', entity))
     add_node(
         g,
         name,
-        **styles.get('entity', {
-            'shape': 'box',
-        }))
+        **attrs
+    )
     add_entity_attributes(
         g,
         name,
@@ -92,10 +269,11 @@ def add_entity_attributes(g, entity_name, entity, styles):
 
 def add_entity_attribute(g, entity_name, attribute_name, attribute, styles):
     node_name = labels_to_nodename(entity_name, attribute_name)
+
     attrs = styles.get('attribute', {}).copy()
-    attrs.update({
-        'label': attribute_name,
-    })
+    attrs['label'] = attribute_name
+    attrs.update(attrs_for('node', attribute))
+
     add_node(
         g,
         node_name,
@@ -110,19 +288,20 @@ def add_entity_attribute(g, entity_name, attribute_name, attribute, styles):
 
 def add_relationship(g, relationship, styles):
     label = relationship.get(
-        'comment',
+        'label',
         '-'.join([
-            relationship['source']['name'].upper()[0],
-            relationship['target']['name'].upper()[0],
+            relationship['from']['name'].upper()[0],
+            relationship['to']['name'].upper()[0],
         ]))
+
     attrs = styles.get('relationship', {
         "shape": "diamond",
         "style": "filled",
         "color": "lightgrey",
     }).copy()
-    attrs.update({
-        'label': label,
-    })
+    attrs['label'] = label
+    attrs.update(attrs_for('node', relationship))
+
     add_node(
         g,
         connectorid(relationship),
@@ -136,16 +315,16 @@ def add_cardinality(g, relationship, styles):
 
     add_edge(
         g,
-        label_to_nodename(relationship['source']['name']),
+        label_to_nodename(relationship['from']['name']),
         connector_id,
-        label=relationship['source'].get('cardinality', ''),
+        label=relationship['from'].get('cardinality', ''),
         **styles.get('cardinality', {})
     )
     add_edge(
         g,
         connector_id,
-        label_to_nodename(relationship['target']['name']),
-        label=relationship['target'].get('cardinality'),
+        label_to_nodename(relationship['to']['name']),
+        label=relationship['to'].get('cardinality'),
         **styles.get('cardinality', {})
     )
 
@@ -157,8 +336,8 @@ def add_edge(g, source_id, target_id, **kwargs):
 def connectorid(relationship):
     return '_'.join(
         [
-            label_to_nodename(relationship['source']['name']),
-            label_to_nodename(relationship['target']['name']),
+            label_to_nodename(relationship['from']['name']),
+            label_to_nodename(relationship['to']['name']),
         ]
     )
 
@@ -168,6 +347,14 @@ def add_node(g, name, **kwargs):
         name,
         **kwargs
     )
+
+
+def attrs_for(type, values):
+    result = {}
+    for attr in valid_attrs:
+        if attr in values:
+            result[attr] = values[attr]
+    return result
 
 
 def labels_to_nodename(*labels):

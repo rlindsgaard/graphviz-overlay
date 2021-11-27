@@ -24,31 +24,31 @@
     },
     "relationships": [
         {
-            "source": {
+            "from": {
                 "name": "course",
                 "cardinality": "n"
             },
-            "target": {
+            "to": {
                 "name": "institute",
                 "cardinality": "1"
             }
         },
         {
-            "target": {
+            "to": {
                 "name": "course",
                 "cardinality": "n"
             },
-            "source": {
+            "from": {
                 "name": "student",
                 "cardinality": "m"
             }
         },
         {
-            "target": {
+            "to": {
                 "name": "institute",
                 "cardinality": "1"
             },
-            "source": {
+            "from": {
                 "name": "student",
                 "cardinality": "n"
             }
