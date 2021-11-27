@@ -1,0 +1,70 @@
+{
+    "entities": [
+        {
+            "name": "course",
+            "attributes": [
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "code"
+                }
+            ]
+        },
+        {
+            "name": "institute",
+            "attributes": [
+                {
+                    "name": "name"
+                }
+            ]
+        },
+        {
+            "name": "student",
+            "attributes": [
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "number"
+                },
+                {
+                    "name": "grade"
+                }
+            ]
+        }
+    ],
+    "relationships": [
+        {
+            "source": {
+                "name": "course",
+                "cardinality": "n"
+            },
+            "target": {
+                "name": "institute",
+                "cardinality": "1"
+            }
+        },
+        {
+            "target": {
+                "name": "course",
+                "cardinality": "n"
+            },
+            "source": {
+                "name": "student",
+                "cardinality": "m"
+            }
+        },
+        {
+            "target": {
+                "name": "institute",
+                "cardinality": "1"
+            },
+            "source": {
+                "name": "student",
+                "cardinality": "n"
+            }
+        }
+    ],
+    "layout": "neato"
+}
