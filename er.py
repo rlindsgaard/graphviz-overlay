@@ -185,108 +185,131 @@ valid_attrs = [
 ]
 
 
+class Context(object):
+    def __init__(self, graph, styles, prefix=''):
+        self.graph = graph
+        self.styles = styles
+
+    def get_style(self, style_type, default={}):
+        return self.styles.get(style_type, default)
+
+    def node_name(self, name):
+        if not self.prefix:
+            return name
+        return f'{self.prefix}_{name}'
+
+    def add_edge(self, source_id, target_id, **kwargs):
+        self.graph.edge(source_id, target_id, **kwargs)
+
+    def add_node(self, name, **kwargs):
+        self.graph.node(
+            name,
+            **kwargs
+        )
+
+
 def main(opts):
     with open(opts.infile, mode='r') as f:
         model = json.load(f)
     dot = graphviz.Graph()
-
     styles = model.get('styles', {})
+    ctx = Context(dot, styles)
+
     if opts.domain:
         for domain in opts.domain.split('.'):
             model = model['domains'][domain]
 
-    add_graph(dot, model, styles)
+    add_graph(ctx, model)
 
     print(dot.source)
 
 
-def add_graph(g, model, styles):
-    attrs = styles.get('graph', {})
+def add_graph(ctx, model):
+    attrs = ctx.get_style('graph')
     attrs.update(attrs_for('graph', model))
-    g.attr('graph', **attrs)
+    # ctx.graph.attr('graph', **attrs)
 
-    add_domains(g, model.get('domains', {}), styles)
-    add_entity_relationships(g, model, styles)
+    add_domains(ctx, model.get('domains', {}))
+    add_entity_relationships(ctx, model)
 
 
-def add_domains(g, domains, styles):
+def add_domains(ctx, domains):
     for name, domain in domains.items():
-        add_domain(g, name, domain, styles)
+        add_domain(ctx, name, domain)
 
 
-def add_domain(g, name, domain, styles):
+def add_domain(ctx, name, domain):
     graphname = f'cluster_{name}'
 
-    domain_styles = styles.copy()
+    domain_styles = ctx.styles.copy()
     domain_styles.update(domain.get('styles', {}))
 
-    with g.subgraph(name=graphname) as c:
+    with ctx.graph.subgraph(name=graphname) as c:
+        new_ctx = Context(c, domain_styles)
+
         c.attr(**attrs_for('graph', domain))
-        add_domains(c, domain.get('domains', {}), domain_styles)
-        add_entity_relationships(c, domain, domain_styles)
+
+        add_domains(new_ctx, domain.get('domains', {}))
+        add_entity_relationships(new_ctx, domain)
 
 
-def add_entity_relationships(g, model, styles):
-    add_entities(g, model.get('entities', {}), styles)
-    add_relationships(g, model.get('relationships', []), styles)
+def add_entity_relationships(ctx, model):
+    add_entities(ctx, model.get('entities', {}))
+    add_relationships(ctx, model.get('relationships', []))
 
 
-def add_entities(g, entities, styles):
+def add_entities(ctx, entities):
     for name, entity in entities.items():
-        add_entity(g, name, entity, styles)
+        add_entity(ctx, name, entity)
 
 
-def add_relationships(g, relationships, styles):
-    for relationship in relationships:
-        add_relationship(g, relationship, styles)
-
-
-def add_entity(g, name, entity, styles):
-    attrs = styles.get(
+def add_entity(ctx, name, entity):
+    attrs = ctx.styles.get(
         'entity',
         {
             'shape': 'box',
         }
     ).copy()
     attrs.update(attrs_for('node', entity))
-    add_node(
-        g,
+    ctx.add_node(
         name,
         **attrs
     )
     add_entity_attributes(
-        g,
+        ctx,
         name,
         entity,
-        styles,
     )
 
 
-def add_entity_attributes(g, entity_name, entity, styles):
+def add_entity_attributes(ctx, entity_name, entity):
     for attribute_name, attribute in entity.get('attributes', {}).items():
-        add_entity_attribute(g, entity_name, attribute_name, attribute, styles)
+        add_entity_attribute(ctx, entity_name, attribute_name, attribute)
 
 
-def add_entity_attribute(g, entity_name, attribute_name, attribute, styles):
+def add_entity_attribute(ctx, entity_name, attribute_name, attribute):
     node_name = labels_to_nodename(entity_name, attribute_name)
 
-    attrs = styles.get('attribute', {}).copy()
+    attrs = ctx.styles.get('attribute', {}).copy()
     attrs['label'] = attribute_name
     attrs.update(attrs_for('node', attribute))
 
-    add_node(
-        g,
+    ctx.add_node(
         node_name,
         **attrs
     )
-    add_edge(
-        g,
+    ctx.add_edge(
         node_name,
         entity_name,
     )
 
 
-def add_relationship(g, relationship, styles):
+def add_relationships(ctx, relationships):
+    for relationship in relationships:
+        add_relationship(ctx, relationship)
+
+
+def add_relationship(ctx, relationship):
     label = relationship.get(
         'label',
         '-'.join([
@@ -294,7 +317,7 @@ def add_relationship(g, relationship, styles):
             relationship['to']['name'].upper()[0],
         ]))
 
-    attrs = styles.get('relationship', {
+    attrs = ctx.styles.get('relationship', {
         "shape": "diamond",
         "style": "filled",
         "color": "lightgrey",
@@ -302,35 +325,28 @@ def add_relationship(g, relationship, styles):
     attrs['label'] = label
     attrs.update(attrs_for('node', relationship))
 
-    add_node(
-        g,
+    ctx.add_node(
         connectorid(relationship),
         **attrs
     )
-    add_cardinality(g, relationship, styles)
+    add_cardinality(ctx, relationship)
 
 
-def add_cardinality(g, relationship, styles):
+def add_cardinality(ctx, relationship):
     connector_id = connectorid(relationship)
 
-    add_edge(
-        g,
+    ctx.add_edge(
         label_to_nodename(relationship['from']['name']),
         connector_id,
         label=relationship['from'].get('cardinality', ''),
-        **styles.get('cardinality', {})
+        **ctx.styles.get('cardinality', {})
     )
-    add_edge(
-        g,
+    ctx.add_edge(
         connector_id,
         label_to_nodename(relationship['to']['name']),
-        label=relationship['to'].get('cardinality'),
-        **styles.get('cardinality', {})
+        label=relationship['to'].get('cardinality', ''),
+        **ctx.styles.get('cardinality', {})
     )
-
-
-def add_edge(g, source_id, target_id, **kwargs):
-    g.edge(source_id, target_id, **kwargs)
 
 
 def connectorid(relationship):
@@ -339,13 +355,6 @@ def connectorid(relationship):
             label_to_nodename(relationship['from']['name']),
             label_to_nodename(relationship['to']['name']),
         ]
-    )
-
-
-def add_node(g, name, **kwargs):
-    g.node(
-        name,
-        **kwargs
     )
 
 
