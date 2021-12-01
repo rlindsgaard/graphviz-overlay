@@ -131,7 +131,7 @@ valid_attrs = [
     'pos',
     'quadtree',
     'quantum',
-    'rank',
+    # 'rank',  # We intepret this one ourselves
     'rankdir',
     'ranksep',
     'ratio',
@@ -207,6 +207,14 @@ class Context(object):
             **kwargs
         )
 
+    def rank(self, rank_type, nodenames):
+        fmt = '{{rank={rank_type}; {nodenames}}}'
+        self.graph.body.append(
+            fmt.format(
+                rank_type=rank_type,
+                nodenames=' '.join(nodenames)),
+        )
+
 
 def main(opts):
     with open(opts.infile, mode='r') as f:
@@ -227,10 +235,15 @@ def main(opts):
 def add_graph(ctx, model):
     attrs = ctx.get_style('graph')
     attrs.update(attrs_for('graph', model))
-    # ctx.graph.attr('graph', **attrs)
+    ctx.graph.attr('graph', **attrs)
 
     add_domains(ctx, model.get('domains', {}))
     add_entity_relationships(ctx, model)
+
+    # Append rank
+    for rank_type, nodenames in model.get('rank', {}).items():
+
+        ctx.rank(rank_type, nodenames)
 
 
 def add_domains(ctx, domains):
@@ -251,6 +264,10 @@ def add_domain(ctx, name, domain):
 
         add_domains(new_ctx, domain.get('domains', {}))
         add_entity_relationships(new_ctx, domain)
+
+        # Append rank
+        for rank_type, nodenames in domain.get('rank', {}).items():
+            ctx.rank(rank_type, nodenames)
 
 
 def add_entity_relationships(ctx, model):
@@ -360,8 +377,8 @@ def connectorid(relationship):
 
 def attrs_for(type, values):
     result = {}
-    for attr in valid_attrs:
-        if attr in values:
+    for attr in values.keys():
+        if attr in valid_attrs:
             result[attr] = values[attr]
     return result
 
