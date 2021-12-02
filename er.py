@@ -265,7 +265,13 @@ def main(opts):
     with open(opts.infile, mode='r') as f:
         model = json.load(f)
     dot = graphviz.Graph()
-    styles = model.get('styles', {})
+
+    styles = {}
+    if opts.stylesheet:
+        with open(opts.stylesheet, mode='r') as f:
+            styles.update(json.load(f))
+    styles.update(model.get('styles', {}))
+
     ctx = Context(dot, styles)
 
     if opts.domain:
@@ -441,5 +447,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '-d', '--domain',
         help='Domain to output',
+    )
+    parser.add_argument(
+        '-s', '--stylesheet',
+        help='Stylesheet file',
     )
     main(parser.parse_args())
