@@ -186,9 +186,26 @@ valid_attrs = [
 
 
 class Context(object):
+    base_styles = {
+        'graph': {},
+        'node': {},
+        'edge': {},
+        'entity': {
+            'shape': 'box',
+        },
+        'attribute': {},
+        'relationship': {
+            'shape': 'diamond',
+            'style': 'filled',
+            'color': 'lightgrey',
+        },
+        'cardinality': {},
+    }
+
     def __init__(self, graph, styles, prefix=''):
         self.graph = graph
-        self.styles = styles
+        self.styles = self.base_styles.copy()
+        self.styles.update(styles)
 
     def get_style(self, style_type, default={}):
         return self.styles.get(style_type, default)
@@ -198,14 +215,42 @@ class Context(object):
             return name
         return f'{self.prefix}_{name}'
 
-    def add_edge(self, source_id, target_id, **kwargs):
-        self.graph.edge(source_id, target_id, **kwargs)
+    def add_edge(self, source_id, target_id, attributes=None, classes=None):
+        classes = classes or []
 
-    def add_node(self, name, **kwargs):
+        attrs = self._build_attributes(
+            attributes,
+            ['edge'] + classes,
+        )
+        self.graph.edge(
+            source_id,
+            target_id,
+            **attrs
+        )
+
+    def add_node(self, name, attributes=None, classes=None):
+        classes = classes or []
+
+        attrs = self._build_attributes(
+            attributes,
+            ['node'] + classes,
+        )
+
         self.graph.node(
             name,
-            **kwargs
+            **attrs
         )
+
+    def _build_attributes(self, attributes, classes):
+        attrs = {}
+
+        for c in classes:
+            attrs.update(self.styles.get(c, {}))
+
+        if attributes:
+            attrs.update(attributes)
+
+        return attrs_for(classes[0], attrs)
 
     def rank(self, rank_type, nodenames):
         fmt = '{{rank={rank_type}; {nodenames}}}'
@@ -242,7 +287,6 @@ def add_graph(ctx, model):
 
     # Append rank
     for rank_type, nodenames in model.get('rank', {}).items():
-
         ctx.rank(rank_type, nodenames)
 
 
@@ -281,16 +325,10 @@ def add_entities(ctx, entities):
 
 
 def add_entity(ctx, name, entity):
-    attrs = ctx.styles.get(
-        'entity',
-        {
-            'shape': 'box',
-        }
-    ).copy()
-    attrs.update(attrs_for('node', entity))
     ctx.add_node(
         name,
-        **attrs
+        entity,
+        classes=['entity'],
     )
     add_entity_attributes(
         ctx,
@@ -307,13 +345,15 @@ def add_entity_attributes(ctx, entity_name, entity):
 def add_entity_attribute(ctx, entity_name, attribute_name, attribute):
     node_name = labels_to_nodename(entity_name, attribute_name)
 
-    attrs = ctx.styles.get('attribute', {}).copy()
-    attrs['label'] = attribute_name
-    attrs.update(attrs_for('node', attribute))
+    attrs = {
+        'label': attribute_name,
+    }
+    attrs.update(attribute)
 
     ctx.add_node(
         node_name,
-        **attrs
+        attrs,
+        classes=['attribute'],
     )
     ctx.add_edge(
         node_name,
@@ -334,17 +374,15 @@ def add_relationship(ctx, relationship):
             relationship['to']['name'].upper()[0],
         ]))
 
-    attrs = ctx.styles.get('relationship', {
-        "shape": "diamond",
-        "style": "filled",
-        "color": "lightgrey",
-    }).copy()
-    attrs['label'] = label
-    attrs.update(attrs_for('node', relationship))
+    attrs = {
+        'label': label,
+    }
+    attrs.update(relationship)
 
     ctx.add_node(
         connectorid(relationship),
-        **attrs
+        attrs,
+        classes=['relationship'],
     )
     add_cardinality(ctx, relationship)
 
@@ -355,14 +393,14 @@ def add_cardinality(ctx, relationship):
     ctx.add_edge(
         label_to_nodename(relationship['from']['name']),
         connector_id,
-        label=relationship['from'].get('cardinality', ''),
-        **ctx.styles.get('cardinality', {})
+        {'label': relationship['from'].get('cardinality', '')},
+        classes=['cardinality'],
     )
     ctx.add_edge(
         connector_id,
         label_to_nodename(relationship['to']['name']),
-        label=relationship['to'].get('cardinality', ''),
-        **ctx.styles.get('cardinality', {})
+        {'label': relationship['to'].get('cardinality', '')},
+        classes=['cardinality'],
     )
 
 
