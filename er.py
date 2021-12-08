@@ -4,6 +4,12 @@ Generate a graphviz ER diagram from a json structure.
 Produces an ER diagram in the format presented as example
 in graphvizs gallery https://graphviz.org/Gallery/undirected/ER.html
 
+TODO:
+- Make ranks into labels and "collect"
+- Change domains into being either clusters or subgraphs
+- Make relationships take multiple start/end nodes
+- Automatic prefixing of subgraph/cluster nodes?
+
 """
 from argparse import ArgumentParser
 import graphviz
@@ -292,8 +298,9 @@ def add_graph(ctx, model):
     add_entity_relationships(ctx, model)
 
     # Append rank
-    for rank_type, nodenames in model.get('rank', {}).items():
-        ctx.rank(rank_type, nodenames)
+    for rank_type, nodename_lists in model.get('rank', {}).items():
+        for nodenames in nodename_lists:
+            ctx.rank(rank_type, nodenames)
 
 
 def add_domains(ctx, domains):
@@ -396,16 +403,20 @@ def add_relationship(ctx, relationship):
 def add_cardinality(ctx, relationship):
     connector_id = connectorid(relationship)
 
+    from_attrs = {'label': relationship['from'].get('cardinality', '')}
+    from_attrs.update(relationship['from'])
     ctx.add_edge(
         label_to_nodename(relationship['from']['name']),
         connector_id,
-        {'label': relationship['from'].get('cardinality', '')},
+        from_attrs,
         classes=['cardinality'],
     )
+    to_attrs = {'label': relationship['to'].get('cardinality', '')}
+    to_attrs.update(relationship['to'])
     ctx.add_edge(
         connector_id,
         label_to_nodename(relationship['to']['name']),
-        {'label': relationship['to'].get('cardinality', '')},
+        to_attrs,
         classes=['cardinality'],
     )
 
