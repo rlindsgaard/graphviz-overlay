@@ -182,20 +182,23 @@ valid_attrs = [
 
 
 def main(opts):
-    with open(opts.infile, mode='r') as f:
-        model = json.load(f)
+    model = load_json_file(opts.infile)
 
     styles = {}
     if opts.stylesheet:
-        with open(opts.stylesheet, mode='r') as f:
-            styles.update(json.load(f))
-    styles.update(model.get('styles', {}))
+        styles = load_json_file(opts.stylesheet)
 
-    # ctx = GraphContext(model, graph_name=opts.name, styles=styles)
-    ctx = DigraphContext(model, graph_name=opts.name, styles=styles)
-    walk_model(ctx, model)
+    ctx = GraphContext(styles)
 
-    print(ctx.source())
+    overlay = opts.overlay(ctx)
+    overlay.draw(opts.name, model)
+
+    print(overlay.source())
+
+
+def load_json_file(filename):
+    with open(filename, mode='r') as f:
+        return json.load(f)
 
 
 class GraphContext(object):
@@ -254,40 +257,39 @@ class GraphContext(object):
         'edge': {},
     }
 
-    def __init__(self, model, graph_name='', styles=None, prefix='', _level=0):
+    def __init__(
+        self, stylesheet, prefix='', _level=0
+    ):
+        self.graph = None
         self.styles = self.base_styles.copy()
-        self.styles.update(styles or {})
+        self.styles.update(stylesheet)
 
-        self.graph = self._init_graph(
-            graph_name,
-            graph_attr=self.styles['graph'],
-            node_attr=self.styles['node'],
-            edge_attr=self.styles['edge'],
-        )
-
-        graph_attrs = (
-            self._build_attributes('graph', model, model.get('classes', []))
-            or {}
-        )
-
-        self.graph.attr(**graph_attrs)
         self._ranks = {}
         self._level = _level
         self.prefix = prefix
 
-    def _init_graph(self, name, *args, **kwargs):
-        return graphviz.Graph(name=name, *args, **kwargs)
+    def init_graph(self, name, graph_class, attributes={}):
+        graph_attrs = self._build_attributes(
+            'graph',
+            attributes,
+        )
+        self.graph = graph_class(
+            name,
+            graph_attr=graph_attrs,
+            node_attr=self._build_attributes('node', {}),
+            edge_attr=self._build_attributes('edge', {}),
+        )
 
     def new_context(self, name, model):
         styles = self.styles.copy()
-        styles.update(model.get('styles', {}))
-        return self.__class__(
-            model,
-            graph_name=name,
-            styles=styles,
+        # styles.update(model.get('styles', {}))
+        ctx = self.__class__(
+            styles,
             prefix=model.get('prefix', ''),
             _level=self._level + 1,
         )
+        ctx.init_graph(name, self.graph.__class__, model)
+        return ctx
 
     def add_subgraph_from_context(self, ctx):
         self.graph.subgraph(
@@ -337,7 +339,28 @@ class GraphContext(object):
             **attrs
         )
 
-    def _build_attributes(self, type, attributes, classes):
+    def _build_attributes(
+        self, type: str, attributes: dict, classes: list = None
+    ) -> dict:
+        """
+        Construct a dictionary of attributes for a graphviz element.
+
+        Filters out any non-valid attributes and applies any attributes
+        defined in any of the classes.
+
+        Classes work like CSS classes, any attribute defined gets
+        overriden by that later defined one.
+
+        Any attributes specified overrides the one supplied by
+        any classes.
+
+        :param str type: The DOT element, graph, subgraph, node, edge
+        :param dict attributes: (key, value) pairs. The value is
+            treated as a literal.
+        :param list classes: Any classes to apply defined by the stylesheet.
+        :returns: A (key, value) mapping of element attributes.
+        :rtype: dict
+        """
         attrs = {}
 
         classes = classes or []
@@ -369,41 +392,76 @@ class GraphContext(object):
         return self.graph.source
 
 
-class DigraphContext(GraphContext):
-    def _init_graph(self, name, *args, **kwargs):
-        return graphviz.Digraph(name=name, *args, **kwargs)
+class BaseOverlay(object):
+    def __init__(self, ctx):
+        self.ctx = ctx
+
+    def draw(self, name, model, graph_class):
+        self.ctx.init_graph(
+            name,
+            graph_class,
+        )
+        self.walk_model(self.ctx, model)
+
+    def load_styles(self, stylesheet, model):
+        styles = {}
+        if stylesheet:
+            styles.update(stylesheet)
+        styles.update(
+            model.get('styles', {}),
+        )
+        return styles
+
+    def source(self):
+        return self.ctx.source()
+
+    def walk_model(self, ctx, model):
+        self.add_nodes(ctx, model.get('nodes', {}))
+        self.add_subgraphs(ctx, model.get('subgraphs', {}))
+        self.add_edges(ctx, model.get('edges', {}))
+        self.add_ranks(ctx, model.get('ranks', {}))
+
+    def add_nodes(self, ctx, nodes):
+        for node_id, attributes in nodes.items():
+            ctx.add_node(node_id, attributes)
+
+    def add_subgraphs(self, ctx, subgraphs):
+        for subgraph_name, model in subgraphs.items():
+            subgraph_ctx = ctx.new_context(subgraph_name, model)
+
+            self.walk_model(subgraph_ctx, model)
+
+            ctx.add_subgraph_from_context(subgraph_ctx)
+
+    def add_edges(self, ctx, edges):
+        for edge in edges:
+            ctx.add_edge(edge)
+
+    def add_ranks(self, ctx, ranks):
+        for rank_name, rank_type in ranks.items():
+            ctx.add_rank(rank_name, rank_type)
 
 
-def walk_model(ctx, model):
-    add_nodes(ctx, model.get('nodes', {}))
-    add_subgraphs(ctx, model.get('subgraphs', {}))
-    add_edges(ctx, model.get('edges', {}))
-    add_ranks(ctx, model.get('ranks', {}))
+class GraphOverlay(BaseOverlay):
+
+    name = 'graph'
+
+    def draw(self, name, model):
+        super().draw(name, model, graphviz.Graph)
 
 
-def add_nodes(ctx, nodes):
-    for node_id, attributes in nodes.items():
-        ctx.add_node(node_id, attributes)
+class DigraphOverlay(BaseOverlay):
+
+    name = 'digraph'
+
+    def draw(self, name, model):
+        super().draw(name, model, graphviz.Digraph)
 
 
-def add_subgraphs(ctx, subgraphs):
-    for subgraph_name, model in subgraphs.items():
-        subgraph_ctx = ctx.new_context(subgraph_name, model)
-
-        walk_model(subgraph_ctx, model)
-
-        ctx.add_subgraph_from_context(subgraph_ctx)
-
-
-def add_edges(ctx, edges):
-    for edge in edges:
-        ctx.add_edge(edge)
-
-
-def add_ranks(ctx, ranks):
-    for rank_name, rank_type in ranks.items():
-        ctx.add_rank(rank_name, rank_type)
-
+overlays = [
+    GraphOverlay,
+    DigraphOverlay,
+]
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -417,7 +475,13 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '-s', '--stylesheet',
+        default=None,
         help='Stylesheet file',
     )
+    subparsers = parser.add_subparsers()
+
+    for overlay in overlays:
+        subparser = subparsers.add_parser(overlay.name)
+        subparser.set_defaults(overlay=overlay)
 
     main(parser.parse_args())
