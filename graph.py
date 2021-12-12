@@ -4,6 +4,7 @@ Generate a undirected graph
 from argparse import ArgumentParser
 import graphviz
 import json
+from overlays.er import EntityRelationshipOverlay
 from overlays.graphviz import GraphOverlay, DigraphOverlay
 
 valid_attrs = [
@@ -396,7 +397,9 @@ class GraphContext(object):
 overlays = [
     GraphOverlay,
     DigraphOverlay,
+    EntityRelationshipOverlay,
 ]
+
 
 if __name__ == '__main__':
     parser = ArgumentParser()
