@@ -264,16 +264,17 @@ class GraphContext(object):
     ):
         self.graph = None
         self.styles = self.base_styles.copy()
-        self.styles.update(stylesheet)
-
+        self.stylesheet = stylesheet
         self._ranks = {}
         self._level = _level
         self.prefix = prefix
 
-    def init_graph(self, name, graph_class, attributes={}):
+    def init_graph(self, name, graph_class, attributes=None, styles=None):
+        self.set_styles(styles or {})
+
         graph_attrs = self._build_attributes(
             'graph',
-            attributes,
+            attributes or {},
         )
         self.graph = graph_class(
             name,
@@ -281,6 +282,17 @@ class GraphContext(object):
             node_attr=self._build_attributes('node', {}),
             edge_attr=self._build_attributes('edge', {}),
         )
+
+    def set_styles(self, overlay_styles):
+        """
+        Sets the active styles used.
+
+        First applies the "base_styles", then any styles defined
+        by the overlay and finally styles defined in the stylesheet.
+        """
+        self.styles = self.base_styles.copy()
+        self.styles.update(overlay_styles)
+        self.styles.update(self.stylesheet)
 
     def new_context(self, name, model):
         styles = self.styles.copy()
@@ -316,6 +328,7 @@ class GraphContext(object):
             attributes,
             classes,
         )
+
         self.graph.edge(
             edge['from'],
             edge['to'],

@@ -2,6 +2,12 @@ import graphviz
 
 
 class GraphvizOverlay(object):
+    """
+    Base overlay for graphviz based graphs.
+    """
+
+    styles = {}
+
     def __init__(self, ctx):
         self.ctx = ctx
 
@@ -9,17 +15,9 @@ class GraphvizOverlay(object):
         self.ctx.init_graph(
             name,
             graph_class,
+            styles=self.styles
         )
         self.walk_model(self.ctx, model)
-
-    def load_styles(self, stylesheet, model):
-        styles = {}
-        if stylesheet:
-            styles.update(stylesheet)
-        styles.update(
-            model.get('styles', {}),
-        )
-        return styles
 
     def source(self):
         return self.ctx.source()
