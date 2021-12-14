@@ -261,7 +261,7 @@ class GraphContext(object):
     }
 
     def __init__(
-        self, stylesheet, prefix='', _level=0
+        self, stylesheet, path='', prefix='', _level=0
     ):
         self.graph = None
         self.styles = self.base_styles.copy()
@@ -269,6 +269,7 @@ class GraphContext(object):
         self._ranks = {}
         self._level = _level
         self.prefix = prefix
+        self.path = path
 
     def init_graph(self, name, graph_class, attributes=None, styles=None):
         self.set_styles(styles or {})
@@ -295,11 +296,12 @@ class GraphContext(object):
         self.styles.update(overlay_styles)
         self.styles.update(self.stylesheet)
 
-    def new_context(self, name, model):
+    def new_context(self, name, path, model):
         styles = self.styles.copy()
         # styles.update(model.get('styles', {}))
         ctx = self.__class__(
             styles,
+            path=path,
             prefix=model.get('prefix', ''),
             _level=self._level + 1,
         )

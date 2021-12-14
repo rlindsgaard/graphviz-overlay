@@ -34,7 +34,11 @@ class GraphvizOverlay(object):
 
     def add_subgraphs(self, ctx, subgraphs):
         for subgraph_name, model in subgraphs.items():
-            subgraph_ctx = ctx.new_context(subgraph_name, model)
+            subgraph_ctx = ctx.new_context(
+                subgraph_name,
+                subgraph_name,
+                model,
+            )
 
             self.walk_model(subgraph_ctx, model)
 

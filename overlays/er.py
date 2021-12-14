@@ -29,7 +29,7 @@ class EntityRelationshipOverlay(GraphOverlay):
     def add_domain(self, ctx, name, domain):
         graphname = f'cluster_{name}'
 
-        new_ctx = ctx.new_context(graphname, domain)
+        new_ctx = ctx.new_context(graphname, name, domain)
         self.walk_model(new_ctx, domain)
         ctx.add_subgraph_from_context(new_ctx)
 
