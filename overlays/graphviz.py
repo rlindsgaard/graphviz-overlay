@@ -8,8 +8,18 @@ class GraphvizOverlay(object):
 
     styles = {}
 
-    def __init__(self, ctx):
+    def __init__(self, ctx, select):
         self.ctx = ctx
+        self.selected_paths = [
+            p.strip()
+            for p in select.split(',')
+        ]
+
+    @classmethod
+    def arguments(self):
+        return {
+            'select': {'default': ''}
+        }
 
     def draw(self, name, model, graph_class):
         self.ctx.init_graph(

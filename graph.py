@@ -192,7 +192,12 @@ def main(opts):
 
     ctx = GraphContext(styles)
 
-    overlay = opts.overlay(ctx)
+    overlay_args = {
+        arg: getattr(opts, arg)
+        for arg in opts.overlay.arguments()
+    }
+
+    overlay = opts.overlay(ctx, **overlay_args)
     overlay.draw(opts.name, model)
 
     print(overlay.source())
@@ -446,7 +451,9 @@ if __name__ == '__main__':
 
     for overlay in overlays:
         subparser = subparsers.add_parser(overlay.name)
-
+        args = overlay.arguments()
+        for arg, params in args.items():
+            subparser.add_argument(f'--{arg}', **params)
         subparser.set_defaults(overlay=overlay)
 
     main(parser.parse_args())
