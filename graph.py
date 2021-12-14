@@ -1,11 +1,13 @@
 """
 Generate a undirected graph
 """
-from argparse import ArgumentParser
+from argparse import ArgumentParser, FileType
 import graphviz
 import json
 from overlays.er import EntityRelationshipOverlay
 from overlays.graphviz import GraphOverlay, DigraphOverlay
+import sys
+
 
 valid_attrs = [
     '_background',
@@ -186,9 +188,7 @@ valid_attrs = [
 def main(opts):
     model = load_json_file(opts.infile)
 
-    styles = {}
-    if opts.stylesheet:
-        styles = load_json_file(opts.stylesheet)
+    styles = load_json_file(opts.stylesheet)
 
     ctx = GraphContext(styles)
 
@@ -198,9 +198,10 @@ def main(opts):
     print(overlay.source())
 
 
-def load_json_file(filename):
-    with open(filename, mode='r') as f:
-        return json.load(f)
+def load_json_file(file):
+    if file:
+        return json.load(file)
+    return {}
 
 
 class GraphContext(object):
@@ -422,17 +423,28 @@ if __name__ == '__main__':
         help='Name of the graph')
     parser.add_argument(
         '-i', '--infile',
+        type=FileType(mode='r'),
         help='Input json file',
+        default=sys.stdin
     )
     parser.add_argument(
         '-s', '--stylesheet',
+        type=FileType(mode='r'),
         default=None,
         help='Stylesheet file',
     )
-    subparsers = parser.add_subparsers()
+
+    subparsers = parser.add_subparsers(
+        title='Overlays',
+        description='The overlay that will be used to generate the graph.',
+        required=True,
+        dest='overlay',
+        help='Select the overlay to render the graph.',
+    )
 
     for overlay in overlays:
         subparser = subparsers.add_parser(overlay.name)
+
         subparser.set_defaults(overlay=overlay)
 
     main(parser.parse_args())
