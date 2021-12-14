@@ -50,6 +50,9 @@ class GraphvizOverlay(object):
 
 
 class GraphOverlay(GraphvizOverlay):
+    """
+    Overlay generating an undirected graph.
+    """
 
     name = 'graph'
 
@@ -58,6 +61,9 @@ class GraphOverlay(GraphvizOverlay):
 
 
 class DigraphOverlay(GraphvizOverlay):
+    """
+    Overlay generating a directed graph.
+    """
 
     name = 'digraph'
 
