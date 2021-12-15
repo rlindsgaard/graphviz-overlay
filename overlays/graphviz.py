@@ -27,10 +27,74 @@ class GraphvizOverlay(object):
             graph_class,
             styles=self.styles
         )
-        self.walk_model(self.ctx, model)
+        processed_model = self.process_paths(model)
+        self.walk_model(self.ctx, processed_model)
 
     def source(self):
         return self.ctx.source()
+
+    def process_paths(self, model, current_path=''):
+        """
+        Preprocess the model selecting only elements in selected paths
+        :returns: A filtered version of the model
+        """
+        new_model = model.copy()
+        paths = []
+        if current_path:
+            paths.append(current_path)
+
+        nodes = {}
+        for nodeid, node in model.get('nodes', {}).items():
+            node_paths = paths + node.get('paths', [])
+            if self.in_selected_paths(node_paths):
+                nodes[nodeid] = node
+        new_model['nodes'] = nodes
+        edges = []
+        for edge in model.get('edges', {}):
+            edge_paths = paths + edge.get('paths', [])
+            if self.in_selected_paths(edge_paths):
+                edges.append(edge)
+        new_model['edges'] = edges
+        subgraphs = {}
+        for subgraph_name, subgraph in model.get('subgraphs', {}).items():
+            subgraph_path = subgraph_name
+            if current_path:
+                subgraph_path = f'{current_path}.{subgraph_name}'
+            paths = [subgraph_path]
+
+            if self.in_path_prefix(paths) or self.in_selected_paths(paths):
+                processed_subgraph = self.process_paths(
+                    subgraph,
+                    current_path=subgraph_path,
+                )
+                if (
+                    processed_subgraph.get('nodes', False)
+                    or processed_subgraph.get('edges', False)
+                ):
+                    subgraphs[subgraph_name] = processed_subgraph
+                else:
+                    subgraphs.update(processed_subgraph.get('subgraphs', {}))
+
+        new_model['subgraphs'] = subgraphs
+        return new_model
+
+    def in_selected_paths(self, paths):
+        if self.selected_paths == ['']:
+            return True
+
+        for path in paths:
+            if any(path.startswith(p) for p in self.selected_paths):
+                return True
+
+        return False
+
+    def in_path_prefix(self, paths):
+        if self.selected_paths == ['']:
+            return True
+        for path in paths:
+            if any(p.startswith(path) for p in self.selected_paths):
+                return True
+        return False
 
     def walk_model(self, ctx, model):
         self.add_nodes(ctx, model.get('nodes', {}))
