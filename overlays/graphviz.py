@@ -113,11 +113,23 @@ class GraphvizOverlay(object):
         if self.selected_paths == ['']:
             return True
 
+        inverted_paths = [
+            p[1:]
+            for p in self.selected_paths
+            if p.startswith('^')
+        ]
+        in_inverted_path = False
+
         for path in paths:
             if any(path.startswith(p) for p in self.selected_paths):
                 return True
 
-        return False
+            in_inverted_path = (
+                in_inverted_path
+                or any(path.startswith(p) for p in inverted_paths)
+            )
+
+        return not in_inverted_path
 
     def partially_selected_path(self, paths):
         """Is any current path prefix of a selected path."""
