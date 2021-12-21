@@ -27,13 +27,13 @@ class GraphvizOverlay(object):
             graph_class,
             styles=self.styles
         )
-        processed_model = self.process_paths(model)
+        processed_model = self.preprocess_model(model)
         self.walk_model(self.ctx, processed_model)
 
     def source(self):
         return self.ctx.source()
 
-    def process_paths(self, model, current_path=''):
+    def preprocess_model(self, model, current_path=''):
         """
         Preprocess the model selecting only elements in selected paths
         :returns: A filtered version of the model
@@ -43,27 +43,52 @@ class GraphvizOverlay(object):
         if current_path:
             paths.append(current_path)
 
-        nodes = {}
-        for nodeid, node in model.get('nodes', {}).items():
+        new_model['nodes'] = self.preprocess_nodes(
+            model.get('nodes', {}),
+            paths,
+        )
+
+        new_model['edges'] = self.preprocess_edges(
+            model.get('edges', {}),
+            paths,
+        )
+
+        new_model['subgraphs'] = self.preprocess_subgraphs(
+            model.get('subgraphs', {}),
+            paths,
+            current_path,
+        )
+
+        return new_model
+
+    def preprocess_nodes(self, nodes, paths):
+        selected_nodes = {}
+        for nodeid, node in nodes.items():
             node_paths = paths + node.get('paths', [])
-            if self.in_selected_paths(node_paths):
-                nodes[nodeid] = node
-        new_model['nodes'] = nodes
-        edges = []
-        for edge in model.get('edges', {}):
+            if self.in_a_selected_path(node_paths):
+                selected_nodes[nodeid] = node
+        return selected_nodes
+
+    def preprocess_edges(self, edges, paths):
+        selected_edges = []
+        for edge in edges:
             edge_paths = paths + edge.get('paths', [])
-            if self.in_selected_paths(edge_paths):
-                edges.append(edge)
-        new_model['edges'] = edges
-        subgraphs = {}
-        for subgraph_name, subgraph in model.get('subgraphs', {}).items():
-            subgraph_path = subgraph_name
-            if current_path:
-                subgraph_path = f'{current_path}.{subgraph_name}'
+            if self.in_a_selected_path(edge_paths):
+                selected_edges.append(edge)
+        return selected_edges
+
+    def preprocess_subgraphs(self, subgraphs, paths, current_path=''):
+        selected_subgraphs = {}
+        for subgraph_name, subgraph in subgraphs.items():
+            subgraph_path = self.subgraph_path(subgraph_name, current_path)
+
             paths = [subgraph_path]
 
-            if self.in_path_prefix(paths) or self.in_selected_paths(paths):
-                processed_subgraph = self.process_paths(
+            if (
+                self.partially_selected_path(paths)
+                or self.in_a_selected_path(paths)
+            ):
+                processed_subgraph = self.preprocess_model(
                     subgraph,
                     current_path=subgraph_path,
                 )
@@ -71,14 +96,20 @@ class GraphvizOverlay(object):
                     processed_subgraph.get('nodes', False)
                     or processed_subgraph.get('edges', False)
                 ):
-                    subgraphs[subgraph_name] = processed_subgraph
+                    selected_subgraphs[subgraph_name] = processed_subgraph
                 else:
-                    subgraphs.update(processed_subgraph.get('subgraphs', {}))
+                    selected_subgraphs.update(
+                        processed_subgraph.get('subgraphs', {})
+                    )
+        return selected_subgraphs
 
-        new_model['subgraphs'] = subgraphs
-        return new_model
+    def subgraph_path(self, subgraph_name, current_path):
+        if current_path:
+            return f'{current_path}.{subgraph_name}'
+        return subgraph_name
 
-    def in_selected_paths(self, paths):
+    def in_a_selected_path(self, paths):
+        """Element is in a selected path"""
         if self.selected_paths == ['']:
             return True
 
@@ -88,7 +119,8 @@ class GraphvizOverlay(object):
 
         return False
 
-    def in_path_prefix(self, paths):
+    def partially_selected_path(self, paths):
+        """Is any current path prefix of a selected path."""
         if self.selected_paths == ['']:
             return True
         for path in paths:
