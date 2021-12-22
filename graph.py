@@ -421,26 +421,45 @@ class GraphContext(object):
 
 def format_html_label(label):
     """Produces a graphviz html label from a dictionary."""
-    table_attrs = ['border']
-    td_attrs = ['colspan', 'port']
+
     rows = []
-    for row in label['rows']:
+    for row in label['trs']:
         tds = []
         for td in row:
-            attrs = []
-            for k, v in td.items():
-                if k in td_attrs:
-                    attrs.append(f'{k}="{v}"')
-            tds.append(f"<TD {' '.join(attrs)}>{td['value']}</TD>")
-        rows.append(f"<TR>{''.join(tds)}</TR>")
-    attrs = []
-
-    for k, v in label.items():
-        if k in table_attrs:
-            attrs.append(f'{k}="{v}"')
-
-    table = f"<TABLE {' '.join(attrs)}>{''.join(rows)}</TABLE>"
+            tds.append(
+                format_html_tag('td', td, td['value'])
+            )
+        rows.append(
+            format_html_tag('tr', inner=''.join(tds))
+        )
+    table = format_html_tag('table', label, ''.join(rows))
     return f'<{table}>'
+
+
+def format_html_tag(tag, attrs={}, inner=''):
+    html_attrs = {
+        'TABLE': [
+            'ALIGN', 'BGCOLOR', 'BORDER', 'CELLBORDER', 'CELLPADDING',
+            'CELLSPACING', 'COLOR', 'COLUMNS', 'FIXEDSIZE', 'GRADIENTANGLE',
+            'HEIGHT', 'HREF', 'ID', 'PORT', 'ROWS', 'SIDES',
+            'STYLE', 'TARGET', 'TITLE', 'TOOLTIP', 'VALIGN',
+            'WIDTH',
+        ],
+        'TD': [
+            'ALIGN', 'BALIGN', 'BGCOLOR', 'BORDER', 'CELLPADDING',
+            'CELLSPACING', 'COLOR', 'COLSPAN', 'FIXEDSIZE', 'GRADIENTANGLE',
+            'HEIGHT', 'HREF', 'ID', 'PORT', 'ROWSPAN', 'SIDES',
+            'STYLE', 'TARGET', 'TITLE', 'TOOLTIP', 'VALIGN',
+            'WIDTH',
+        ]
+    }
+    tag = tag.upper()
+    tag_attrs = [
+        f'{k.upper()}="{v}"'
+        for k, v in attrs.items()
+        if k.upper() in html_attrs[tag]
+    ]
+    return f"<{tag} {' '.join(tag_attrs)}>{inner}</{tag}>"
 
 
 overlays = [
