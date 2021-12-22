@@ -6,19 +6,28 @@ class GraphvizOverlay(object):
     Base overlay for graphviz based graphs.
     """
 
-    styles = {}
+    styles = {
+        'highlight': {
+            'penwidth': '3',
+        },
+    }
 
-    def __init__(self, ctx, select):
+    def __init__(self, ctx, select, highlight):
         self.ctx = ctx
         self.selected_paths = [
             p.strip()
             for p in select.split(',')
         ]
+        self.highlighted_paths = [
+            p.strip()
+            for p in highlight.split(',')
+        ]
 
     @classmethod
     def arguments(self):
         return {
-            'select': {'default': ''}
+            'select': {'default': ''},
+            'highlight': {'default': ''},
         }
 
     def draw(self, name, model, graph_class):
@@ -65,16 +74,26 @@ class GraphvizOverlay(object):
         selected_nodes = {}
         for nodeid, node in nodes.items():
             node_paths = paths + node.get('paths', [])
-            if self.in_a_selected_path(node_paths):
-                selected_nodes[nodeid] = node
+            if not self.in_a_selected_path(node_paths):
+                continue
+
+            if self.is_highlighted(node_paths):
+                node['classes'] = node.get('classes', []) + ['highlight']
+
+            selected_nodes[nodeid] = node
         return selected_nodes
 
     def preprocess_edges(self, edges, paths):
         selected_edges = []
         for edge in edges:
             edge_paths = paths + edge.get('paths', [])
-            if self.in_a_selected_path(edge_paths):
-                selected_edges.append(edge)
+            if not self.in_a_selected_path(edge_paths):
+                continue
+
+            if self.is_highlighted(edge_paths):
+                edge['classes'] = edge.get('classes', []) + ['highlight']
+
+            selected_edges.append(edge)
         return selected_edges
 
     def preprocess_subgraphs(self, subgraphs, paths, current_path=''):
@@ -108,20 +127,25 @@ class GraphvizOverlay(object):
             return f'{current_path}.{subgraph_name}'
         return subgraph_name
 
+    def is_highlighted(self, paths):
+        return self.paths_in_paths(paths, self.highlighted_paths)
+
     def in_a_selected_path(self, paths):
         """Element is in a selected path"""
         if self.selected_paths == ['']:
             return True
+        return self.paths_in_paths(paths, self.selected_paths)
 
+    def paths_in_paths(self, paths, selected_paths):
         inverted_paths = [
             p[1:]
-            for p in self.selected_paths
+            for p in selected_paths
             if p.startswith('^')
         ]
         in_inverted_path = False
 
         for path in paths:
-            if any(path.startswith(p) for p in self.selected_paths):
+            if any(path.startswith(p) for p in selected_paths):
                 return True
 
             in_inverted_path = (
@@ -129,7 +153,7 @@ class GraphvizOverlay(object):
                 or any(path.startswith(p) for p in inverted_paths)
             )
 
-        return not in_inverted_path
+        return (inverted_paths and not in_inverted_path)
 
     def partially_selected_path(self, paths):
         """Is any current path prefix of a selected path."""
@@ -164,7 +188,7 @@ class GraphvizOverlay(object):
 
     def add_edges(self, ctx, edges):
         for edge in edges:
-            ctx.add_edge(edge)
+            ctx.add_edge(edge, edge)
 
     def add_ranks(self, ctx, ranks):
         for rank_name, rank_type in ranks.items():
