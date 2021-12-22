@@ -169,6 +169,9 @@ class GraphvizOverlay(object):
         return self.paths_in_paths(paths, self.selected_paths)
 
     def paths_in_paths(self, paths, selected_paths):
+        if selected_paths == ['']:
+            return False
+
         inverted_paths = [
             p[1:]
             for p in selected_paths
