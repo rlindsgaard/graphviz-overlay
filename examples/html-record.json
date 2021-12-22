@@ -1,0 +1,27 @@
+{
+    "nodes": {
+        "node": {
+            "label": {
+                "border": "1",
+                "rows": [
+                    [
+                        {
+                            "colspan": "2",
+                            "value": "Record"
+                        }
+                    ],
+                    [
+                        {
+                            "port": "p0",
+                            "value": "foo"
+                        },
+                        {
+                            "port": "p1",
+                            "value": "bar"
+                        }
+                    ]
+                ]
+            }
+        }
+    }
+}

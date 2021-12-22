@@ -357,6 +357,10 @@ class GraphContext(object):
             classes,
         )
 
+        if 'label' in attrs and isinstance(attrs['label'], dict):
+            attrs['label'] = format_html_label(attrs['label'])
+            attrs['shape'] = 'plain'
+
         self.graph.node(
             self.node_id(name),
             **attrs
@@ -413,6 +417,30 @@ class GraphContext(object):
 
     def source(self):
         return self.graph.source
+
+
+def format_html_label(label):
+    """Produces a graphviz html label from a dictionary."""
+    table_attrs = ['border']
+    td_attrs = ['colspan', 'port']
+    rows = []
+    for row in label['rows']:
+        tds = []
+        for td in row:
+            attrs = []
+            for k, v in td.items():
+                if k in td_attrs:
+                    attrs.append(f'{k}="{v}"')
+            tds.append(f"<TD {' '.join(attrs)}>{td['value']}</TD>")
+        rows.append(f"<TR>{''.join(tds)}</TR>")
+    attrs = []
+
+    for k, v in label.items():
+        if k in table_attrs:
+            attrs.append(f'{k}="{v}"')
+
+    table = f"<TABLE {' '.join(attrs)}>{''.join(rows)}</TABLE>"
+    return f'<{table}>'
 
 
 overlays = [
