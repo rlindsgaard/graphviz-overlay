@@ -17,7 +17,7 @@ class GraphvizOverlay(object):
         }
     }
 
-    def __init__(self, ctx, select, highlight, shade):
+    def __init__(self, ctx, select, highlight, shade, remove_deselected):
         self.ctx = ctx
         self.selected_paths = [
             p.strip()
@@ -31,6 +31,7 @@ class GraphvizOverlay(object):
             p.strip()
             for p in shade.split(',')
         ]
+        self.remove_deselected = remove_deselected
 
     @classmethod
     def arguments(self):
@@ -38,6 +39,15 @@ class GraphvizOverlay(object):
             'select': {'default': ''},
             'highlight': {'default': ''},
             'shade': {'default': ''},
+            'remove_deselected': {
+                'action': 'store_true',
+                'default': False,
+                'help': (
+                    'Remove deselected elements as opposed to hiding them. '
+                    'This will also remove not-selected subgraphs instead of '
+                    'just the elements.'
+                ),
+            },
         }
 
     def draw(self, name, model, graph_class):
@@ -84,7 +94,10 @@ class GraphvizOverlay(object):
         selected_nodes = {}
         for nodeid, node in nodes.items():
             node_paths = paths + node.get('paths', [])
-            if not self.in_a_selected_path(node_paths):
+            if (
+                not self.in_a_selected_path(node_paths)
+                and self.remove_deselected
+            ):
                 continue
             self.preprocess_element(node, node_paths)
 
@@ -95,7 +108,10 @@ class GraphvizOverlay(object):
         selected_edges = []
         for edge in edges:
             edge_paths = paths + edge.get('paths', [])
-            if not self.in_a_selected_path(edge_paths):
+            if (
+                not self.in_a_selected_path(edge_paths)
+                and self.remove_deselected
+            ):
                 continue
 
             self.preprocess_element(edge, edge_paths)
@@ -110,26 +126,25 @@ class GraphvizOverlay(object):
 
             paths = [subgraph_path]
 
+            processed_subgraph = self.preprocess_model(
+                subgraph,
+                current_path=subgraph_path,
+            )
+            # self.preprocess_element(processed_subgraph, paths)
+
             if (
-                self.partially_selected_path(paths)
-                or self.in_a_selected_path(paths)
+                not self.in_a_selected_path(paths)
+                and self.remove_deselected
             ):
-                processed_subgraph = self.preprocess_model(
-                    subgraph,
-                    current_path=subgraph_path,
-                )
-                if (
+                if not (
                     processed_subgraph.get('nodes', False)
                     or processed_subgraph.get('edges', False)
                 ):
-
-                    self.preprocess_element(processed_subgraph, paths)
-
-                    selected_subgraphs[subgraph_name] = processed_subgraph
-                else:
                     selected_subgraphs.update(
                         processed_subgraph.get('subgraphs', {})
                     )
+                    return selected_subgraphs
+            selected_subgraphs[subgraph_name] = processed_subgraph
 
         return selected_subgraphs
 
