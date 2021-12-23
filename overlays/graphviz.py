@@ -139,7 +139,7 @@ class GraphvizOverlay(object):
         Applies styles based on select paths.
         """
 
-        if not self.in_a_selected_path(elem):
+        if not self.in_a_selected_path(paths):
             elem['style'] = 'invis'
 
         if self.is_highlighted(paths):
