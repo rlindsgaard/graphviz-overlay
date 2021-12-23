@@ -500,6 +500,7 @@ if __name__ == '__main__':
         subparser = subparsers.add_parser(overlay.name)
         args = overlay.arguments()
         for arg, params in args.items():
+            arg = arg.replace('_', '-')
             subparser.add_argument(f'--{arg}', **params)
         subparser.set_defaults(overlay=overlay)
 
