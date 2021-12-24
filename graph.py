@@ -270,7 +270,6 @@ class GraphContext(object):
     ):
         self.graph = None
         self.styles = self.base_styles.copy()
-        # self.stylesheet = stylesheet
         self.add_stylesheet(stylesheet)
         self._ranks = {}
         self._level = _level
@@ -309,7 +308,6 @@ class GraphContext(object):
 
     def new_context(self, name, path, model):
         styles = self.styles.copy()
-        # styles.update(model.get('styles', {}))
         ctx = self.__class__(
             styles,
             path=path,
