@@ -266,18 +266,19 @@ class GraphContext(object):
     }
 
     def __init__(
-        self, stylesheet, path='', prefix='', _level=0
+        self, stylesheet: dict, path='', prefix='', _level=0
     ):
         self.graph = None
         self.styles = self.base_styles.copy()
-        self.stylesheet = stylesheet
+        # self.stylesheet = stylesheet
+        self.add_stylesheet(stylesheet)
         self._ranks = {}
         self._level = _level
         self.prefix = prefix
         self.path = path
 
     def init_graph(self, name, graph_class, attributes=None, styles=None):
-        self.set_styles(styles or {})
+        self.add_stylesheet(styles or {})
 
         graph_attrs = self._build_attributes(
             'graph',
@@ -290,15 +291,21 @@ class GraphContext(object):
             edge_attr=self._build_attributes('edge', {}),
         )
 
-    def set_styles(self, overlay_styles):
+    def add_stylesheet(self, stylesheet: dict):
         """
-        Sets the active styles used.
+        Add stylesheet to the context stylesheet.
 
-        First applies the "base_styles", then any styles defined
-        by the overlay and finally styles defined in the stylesheet.
+        A stylesheet consists of a dictionary of class
+        definitions which are themselves dictionaries.
         """
-        self.styles.update(overlay_styles)
-        self.styles.update(self.stylesheet)
+        for class_name, styles in stylesheet.items():
+            new_class = self.styles.get(class_name, {}).copy()
+            for attr, value in styles.items():
+                if attr == 'style':
+                    new_class.get('style', []).append(value)
+                else:
+                    new_class[attr] = value
+            self.styles[class_name] = new_class
 
     def new_context(self, name, path, model):
         styles = self.styles.copy()

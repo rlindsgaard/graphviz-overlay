@@ -19,7 +19,7 @@ class GraphvizOverlay(object):
 
     def __init__(self, ctx, select, highlight, shade, remove_deselected):
         self.ctx = ctx
-        self.ctx.set_styles(self.styles)
+        self.ctx.add_stylesheet(self.styles)
         self.selected_paths = [
             p.strip()
             for p in select.split(',')
