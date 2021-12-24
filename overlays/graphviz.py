@@ -122,6 +122,11 @@ class GraphvizOverlay(object):
     def preprocess_subgraphs(self, subgraphs, paths, current_path=''):
         selected_subgraphs = {}
         for subgraph_name, subgraph in subgraphs.items():
+
+            if subgraph_name.startswith('cluster_'):
+                subgraph_name = subgraph_name[8:]
+                subgraph['cluster'] = True
+
             subgraph_path = self.subgraph_path(subgraph_name, current_path)
 
             paths = [subgraph_path]
@@ -130,20 +135,26 @@ class GraphvizOverlay(object):
                 subgraph,
                 current_path=subgraph_path,
             )
-            # self.preprocess_element(processed_subgraph, paths)
+            self.preprocess_element(processed_subgraph, paths)
 
             if (
                 not self.in_a_selected_path(paths)
-                and self.remove_deselected
             ):
+                if self.remove_deselected:
+                    if not (
+                        processed_subgraph.get('nodes', False)
+                        or processed_subgraph.get('edges', False)
+                    ):
+                        selected_subgraphs.update(
+                            processed_subgraph.get('subgraphs', {})
+                        )
+                        return selected_subgraphs
+            else:
                 if not (
                     processed_subgraph.get('nodes', False)
                     or processed_subgraph.get('edges', False)
                 ):
-                    selected_subgraphs.update(
-                        processed_subgraph.get('subgraphs', {})
-                    )
-                    return selected_subgraphs
+                    processed_subgraph['visible'] = False
             selected_subgraphs[subgraph_name] = processed_subgraph
 
         return selected_subgraphs
@@ -155,7 +166,9 @@ class GraphvizOverlay(object):
         """
 
         if not self.in_a_selected_path(paths):
-            elem['style'] = 'invis'
+            elem['visible'] = False
+        else:
+            elem['visible'] = True
 
         if self.is_highlighted(paths):
             elem['classes'] = elem.get('classes', []) + ['highlighted']

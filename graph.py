@@ -310,6 +310,11 @@ class GraphContext(object):
             prefix=model.get('prefix', ''),
             _level=self._level + 1,
         )
+
+        if model.get('cluster', False):
+            if not name.startswith('cluster_'):
+                name = f'cluster_{name}'
+
         ctx.init_graph(name, self.graph.__class__, model)
         return ctx
 
@@ -398,6 +403,20 @@ class GraphContext(object):
 
         if attributes:
             attrs.update(attributes)
+
+        styles = attrs.get('style', [])
+
+        if not isinstance(styles, list):
+            raise ValueError("style attribute must be a list, got '%r'" % styles)
+
+        if not attributes.get('visible', True):
+            styles.append('invis')
+        elif attributes.get('cluster', False):
+            if not styles:
+                styles.append('solid')
+
+        if styles:
+            attrs['style'] = ','.join(styles)
 
         result = {}
         for attr in attrs.keys():
