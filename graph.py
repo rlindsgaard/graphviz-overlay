@@ -297,7 +297,6 @@ class GraphContext(object):
         First applies the "base_styles", then any styles defined
         by the overlay and finally styles defined in the stylesheet.
         """
-        self.styles = self.base_styles.copy()
         self.styles.update(overlay_styles)
         self.styles.update(self.stylesheet)
 
@@ -372,7 +371,7 @@ class GraphContext(object):
         )
 
     def _build_attributes(
-        self, type: str, attributes: dict, classes: list = None
+        self, element_type: str, attributes: dict, classes: list = None
     ) -> dict:
         """
         Construct a dictionary of attributes for a graphviz element.
@@ -393,7 +392,7 @@ class GraphContext(object):
         :returns: A (key, value) mapping of element attributes.
         :rtype: dict
         """
-        attrs = {}
+        attrs = self.styles.get(element_type).copy()
 
         classes = classes or []
         attributes = attributes or {}
@@ -407,7 +406,9 @@ class GraphContext(object):
         styles = attrs.get('style', [])
 
         if not isinstance(styles, list):
-            raise ValueError("style attribute must be a list, got '%r'" % styles)
+            raise ValueError(
+                "style attribute must be a list, got '%r'" % attributes
+            )
 
         if not attributes.get('visible', True):
             styles.append('invis')

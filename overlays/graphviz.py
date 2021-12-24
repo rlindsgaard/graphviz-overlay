@@ -19,6 +19,7 @@ class GraphvizOverlay(object):
 
     def __init__(self, ctx, select, highlight, shade, remove_deselected):
         self.ctx = ctx
+        self.ctx.set_styles(self.styles)
         self.selected_paths = [
             p.strip()
             for p in select.split(',')
@@ -54,7 +55,7 @@ class GraphvizOverlay(object):
         self.ctx.init_graph(
             name,
             graph_class,
-            styles=self.styles
+            styles=model.get('styles', {})
         )
         processed_model = self.preprocess_model(model)
         self.walk_model(self.ctx, processed_model)
