@@ -1,10 +1,11 @@
 import graphviz
 
 
-class GraphvizOverlay(object):
+class GraphOverlay(object):
     """
-    Base overlay for graphviz based graphs.
+    Overlay generating an undirected graph.
     """
+    name = 'graph'
 
     styles = {
         'highlighted': {
@@ -51,7 +52,7 @@ class GraphvizOverlay(object):
             },
         }
 
-    def draw(self, name, model, graph_class):
+    def draw(self, name, model, graph_class=graphviz.Graph):
         self.ctx.init_graph(
             name,
             graph_class,
@@ -255,25 +256,14 @@ class GraphvizOverlay(object):
 
     def add_edges(self, ctx, edges):
         for edge in edges:
-            ctx.add_edge(edge, edge)
+            ctx.add_edge(edge['from'], edge['to'], edge)
 
     def add_ranks(self, ctx, ranks):
         for rank_name, rank_type in ranks.items():
             ctx.add_rank(rank_name, rank_type)
 
 
-class GraphOverlay(GraphvizOverlay):
-    """
-    Overlay generating an undirected graph.
-    """
-
-    name = 'graph'
-
-    def draw(self, name, model):
-        super().draw(name, model, graphviz.Graph)
-
-
-class DigraphOverlay(GraphvizOverlay):
+class DigraphOverlay(GraphOverlay):
     """
     Overlay generating a directed graph.
     """

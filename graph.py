@@ -337,7 +337,10 @@ class GraphContext(object):
             return name
         return f'{self.prefix}_{name}'
 
-    def add_edge(self, edge, attributes=None, classes=None):
+    def add_edge(
+        self, node_from: str, node_to: str, attributes: dict = None,
+        classes=None
+    ):
         classes = classes or []
 
         attrs = self._build_attributes(
@@ -347,8 +350,8 @@ class GraphContext(object):
         )
 
         self.graph.edge(
-            edge['from'],
-            edge['to'],
+            node_from,
+            node_to,
             **attrs
         )
 
