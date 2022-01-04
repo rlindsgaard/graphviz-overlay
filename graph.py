@@ -433,7 +433,7 @@ class GraphContext(object):
 
         if not isinstance(styles, list):
             raise ValueError(
-                "style attribute must be a list, got '%r'" % attributes
+                "style attribute must be a list, got '%r'" % styles
             )
 
         if not attributes.get('visible', True):

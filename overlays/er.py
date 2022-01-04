@@ -11,7 +11,7 @@ class EntityRelationshipOverlay(GraphOverlay):
         'attribute': {},
         'relationship': {
             'shape': 'diamond',
-            'style': 'filled',
+            'style': ['filled'],
             'color': 'lightgrey',
         },
         'cardinality': {},
@@ -77,12 +77,7 @@ class EntityRelationshipOverlay(GraphOverlay):
             attrs,
             classes=['attribute'],
         )
-        ctx.add_edge(
-            {
-                'from': node_name,
-                'to': entity_name,
-            }
-        )
+        ctx.add_edge(node_name, entity_name)
 
     def add_relationships(self, ctx, relationships):
         for relationship in relationships:
@@ -114,20 +109,16 @@ class EntityRelationshipOverlay(GraphOverlay):
         from_attrs = {'label': relationship['from'].get('cardinality', '')}
         from_attrs.update(relationship['from'])
         ctx.add_edge(
-            {
-                'from': label_to_nodename(relationship['from']['name']),
-                'to': connector_id,
-            },
+            label_to_nodename(relationship['from']['name']),
+            connector_id,
             from_attrs,
             classes=['cardinality'],
         )
         to_attrs = {'label': relationship['to'].get('cardinality', '')}
         to_attrs.update(relationship['to'])
         ctx.add_edge(
-            {
-                'from': connector_id,
-                'to': label_to_nodename(relationship['to']['name']),
-            },
+            connector_id,
+            label_to_nodename(relationship['to']['name']),
             to_attrs,
             classes=['cardinality'],
         )
