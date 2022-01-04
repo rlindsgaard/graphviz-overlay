@@ -56,7 +56,7 @@ class GraphOverlay(object):
         self.ctx.init_graph(
             name,
             graph_class,
-            styles=model.get('styles', {})
+            model,
         )
         processed_model = self.preprocess_model(model)
         self.walk_model(self.ctx, processed_model)

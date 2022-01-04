@@ -266,7 +266,8 @@ class GraphContext(object):
     }
 
     def __init__(
-        self, stylesheet: dict, path='', prefix='', _level=0
+        self, stylesheet: dict, path: str = '', prefix: str = '',
+        _level: int = 0
     ):
         self.graph = None
         self.styles = self.base_styles.copy()
@@ -276,18 +277,27 @@ class GraphContext(object):
         self.prefix = prefix
         self.path = path
 
-    def init_graph(self, name, graph_class, attributes=None, styles=None):
-        self.add_stylesheet(styles or {})
+    def init_graph(self, name, graph_class, attributes):
+        styles = attributes.get('styles', {})
+
+        graph_attrs = styles.get('graph', {})
+        graph_attrs.update(attributes)
 
         graph_attrs = self._build_attributes(
             'graph',
-            attributes or {},
+            graph_attrs
         )
         self.graph = graph_class(
             name,
             graph_attr=graph_attrs,
-            node_attr=self._build_attributes('node', {}),
-            edge_attr=self._build_attributes('edge', {}),
+            node_attr=self._build_attributes(
+                'node',
+                styles.get('node'),
+            ),
+            edge_attr=self._build_attributes(
+                'edge',
+                styles.get('edge'),
+            ),
         )
 
     def add_stylesheet(self, stylesheet: dict):
@@ -297,19 +307,27 @@ class GraphContext(object):
         A stylesheet consists of a dictionary of class
         definitions which are themselves dictionaries.
         """
+        new_stylesheet = self.styles.copy()
         for class_name, styles in stylesheet.items():
-            new_class = self.styles.get(class_name, {}).copy()
+            new_class = new_stylesheet.get(class_name, {})
             for attr, value in styles.items():
                 if attr == 'style':
-                    new_class.get('style', []).append(value)
+                    if 'style' not in new_class:
+                        new_class['style'] = value
+                    else:
+                        for v in value:
+                            if v in new_class['style']:
+                                continue
+                            new_class['style'].append(v)
                 else:
                     new_class[attr] = value
-            self.styles[class_name] = new_class
+            new_stylesheet[class_name] = new_class
+        self.styles = new_stylesheet
 
     def new_context(self, name, path, model):
-        styles = self.styles.copy()
-        ctx = self.__class__(
-            styles,
+        stylesheet = self.styles.copy()
+        ctx = GraphContext(
+            stylesheet,
             path=path,
             prefix=model.get('prefix', ''),
             _level=self._level + 1,
@@ -400,7 +418,7 @@ class GraphContext(object):
         :returns: A (key, value) mapping of element attributes.
         :rtype: dict
         """
-        attrs = self.styles.get(element_type).copy()
+        attrs = self.styles.get(element_type, {}).copy()
 
         classes = classes or []
         attributes = attributes or {}
