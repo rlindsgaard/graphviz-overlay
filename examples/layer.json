@@ -1,0 +1,46 @@
+{
+    "nodes": {
+        "alpha": {
+            "rank": "one"
+        },
+        "bravo": {
+            "rank": "two"
+        },
+        "charlie": {
+            "rank": "three"
+        }
+    },
+    "subgraphs": {
+        "letters": {
+            "nodes": {
+                "a": {
+                    "rank": "one"
+                },
+                "b": {
+                    "rank": "two"
+                },
+                "c": {
+                    "rank": "three"
+                }
+            }
+        },
+        "numbers": {
+            "nodes": {
+                "one": {
+                    "rank": "one"
+                },
+                "two": {
+                    "rank": "two"
+                },
+                "three": {
+                    "rank": "three"
+                }
+            }
+        }
+    },
+    "ranks": {
+        "one": "same",
+        "two": "same",
+        "three": "same"
+    }
+}
