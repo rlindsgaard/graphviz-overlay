@@ -1,0 +1,58 @@
+{
+    "newrank": "true",
+    "nodes": {
+        "node1": {
+            "label": "I'm just a node",
+            "style": ["filled"],
+            "fillcolor": "lightgrey",
+            "paths": ["foo"]
+        },
+        "node2": {
+            "label": "Another node",
+            "paths": ["foo"]
+        }
+    },
+    "subgraphs": {
+        "cluster_subgraph": {
+            "prefix": "subgraph",
+            "label": "A regular subgraph",
+            "nodes": {
+                "node": {
+                    "label": "With a node in it"
+                }
+            },
+            "styles": {
+                "node": {
+                    "style": ["rounded"]
+                }
+            },
+            "subgraphs": {
+                "cluster_subsub": {
+                    "label": "Subsubgraph",
+                    "nodes": {
+                        "subnode": {}
+                    }
+                }
+            }
+        },
+        "other_subgraph": {
+            "nodes": {
+                "other_node": {}
+            }
+        }
+    },
+    "edges": [
+        {
+            "from": "node1",
+            "to": "node2",
+            "paths": ["foo"]
+        }
+    ],
+    "styles": {
+        "graph": {
+        },
+        "node": {
+            "shape": "box"
+        }
+    }
+}
