@@ -515,7 +515,7 @@ overlays = [
 ]
 
 
-if __name__ == '__main__':
+def run():
     parser = ArgumentParser()
     parser.add_argument(
         '-n', '--name',
