@@ -2,6 +2,10 @@
 About
 #####
 
+.. image:: https://readthedocs.org/projects/graphviz-overlay/badge/?version=latest
+  :target: https://graphviz-overlay.readthedocs.io/en/latest/?badge=latest
+  :alt: Documentation Status
+
 Generate templated graphviz source files from structured data
 
 Why
