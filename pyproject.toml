@@ -5,6 +5,8 @@ description = "Generate templated graphviz source files from structured data"
 authors = ["Ronni Elken Lindsgaard <ronni.lindsgaard@gmail.com>"]
 license = "MIT"
 readme = "README.rst"
+repository = "https://github.com/rlindsgaard/graphviz-overlay"
+documentation = "https://graphviz-overlay.readthedocs.io"
 
 [tool.poetry.dependencies]
 python = "^3.9"
