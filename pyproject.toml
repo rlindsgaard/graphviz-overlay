@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "graphviz-overlay"
-version = "0.1.0"
+version = "0.1.1"
 description = "Generate templated graphviz source files from structured data"
 authors = ["Ronni Elken Lindsgaard <ronni.lindsgaard@gmail.com>"]
 license = "MIT"
