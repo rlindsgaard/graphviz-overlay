@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Generate templated graphviz source files from structured data"
 authors = ["Ronni Elken Lindsgaard <ronni.lindsgaard@gmail.com>"]
 license = "MIT"
+readme = "README.rst"
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -11,6 +12,7 @@ graphviz = "^0.19.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
+Sphinx = {version = "^4.3.2", optional = true}
 
 [tool.poetry.scripts]
 graphviz-overlay = "graphviz_overlay.graph:run"
