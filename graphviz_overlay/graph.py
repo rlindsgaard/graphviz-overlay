@@ -4,8 +4,8 @@ Generate a undirected graph
 from argparse import ArgumentParser, FileType
 import graphviz
 import json
-from overlays.er import EntityRelationshipOverlay
-from overlays.graphviz import GraphOverlay, DigraphOverlay
+from graphviz_overlay.overlays.er import EntityRelationshipOverlay
+from graphviz_overlay.overlays.graphviz import GraphOverlay, DigraphOverlay
 import sys
 
 

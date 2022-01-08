@@ -1,4 +1,4 @@
-from overlays.graphviz import GraphOverlay
+from graphviz_overlay.overlays.graphviz import GraphOverlay
 
 class EntityRelationshipOverlay(GraphOverlay):
 
