@@ -14,7 +14,8 @@ graphviz = "^0.19.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
-Sphinx = {version = "^4.3.2", optional = true}
+sphinx-rtd-theme = "^1.0.0"
+Sphinx = "^4.3.2"
 
 [tool.poetry.scripts]
 graphviz-overlay = "graphviz_overlay.graph:run"
