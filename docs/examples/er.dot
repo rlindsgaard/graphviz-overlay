@@ -1,0 +1,28 @@
+graph G {
+	graph [layout=neato]
+	course [shape=box]
+	course_name [label=name]
+	course_name -- course
+	course_code [label=code]
+	course_code -- course
+	institute [shape=box]
+	institute_name [label=name]
+	institute_name -- institute
+	student [shape=box]
+	student_name [label=name]
+	student_name -- student
+	student_number [label=number]
+	student_number -- student
+	student_grade [label=grade]
+	student_grade -- student
+	course_institute [label="C-I" color=lightgrey shape=diamond style=filled]
+	course -- course_institute [label=n]
+	course_institute -- institute [label=1]
+	student_course [label="S-C" color=lightgrey shape=diamond style=filled]
+	student -- student_course [label=m]
+	student_course -- course [label=n]
+	student_institute [label="S-I" color=lightgrey shape=diamond style=filled]
+	student -- student_institute [label=n]
+	student_institute -- institute [label=1]
+}
+

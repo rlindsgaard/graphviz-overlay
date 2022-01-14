@@ -1,0 +1,58 @@
+{
+    "nodes": {
+        "start": {
+            "shape": "Mdiamond"
+        },
+        "end": {
+            "shape": "Msquare"
+        }
+    },
+    "edges": [
+        {"from": "start", "to": "a0"},
+        {"from": "start", "to": "b0"},
+        {"from": "a1", "to": "b3"},
+        {"from": "b2", "to": "a3"},
+        {"from": "a3", "to": "a0"},
+        {"from": "a3", "to": "end"},
+        {"from": "b3", "to": "end"}
+    ],
+    "subgraphs": {
+        "0": {
+            "cluster": true,
+            "style": ["filled"],
+            "color": "lightgrey",
+            "styles": {
+                "node": {
+                    "style": ["filled"],
+                    "color": "white"
+                }
+            },
+            "edges": [
+                {"from": "a0", "to": "a1"},
+                {"from": "a1", "to": "a2"},
+                {"from": "a2", "to": "a3"}
+            ],
+            "label": "process #1"
+        },
+        "1": {
+            "cluster": true,
+            "styles": {
+                "node": {
+                    "style": ["filled"]
+                }
+            },
+            "edges": [
+                {"from": "b0", "to": "b1"},
+                {"from": "b1", "to": "b2"},
+                {"from": "b2", "to": "b3"}
+            ],
+            "label": "process #2",
+            "color": "blue"
+        }
+    },
+    "styles": {
+        "diamond": {
+            "shape": "Mdiamond"
+        }
+    }
+}
