@@ -5,24 +5,24 @@ Update the examples/ directory with output from examples given
 import json
 import textwrap
 
-from graphviz_overlay.overlays import DigraphOverlay, EntityRelationshipOverlay
+from graphviz_overlay.overlays import Digraph, EntityRelationship
 from graphviz_overlay.util import load_json_file
 
 examples = {
     'hello_world': {
         'title': 'Hello World',
         'url': 'https://graphviz.org/Gallery/directed/hello.html',
-        'overlay': DigraphOverlay,
+        'overlay': Digraph,
     },
     'cluster': {
         'title': 'Clusters',
         'url': 'https://graphviz.org/Gallery/directed/cluster.html',
-        'overlay': DigraphOverlay,
+        'overlay': Digraph,
     },
     'er': {
         'title': 'Entity-Relation Data Model',
         'url': 'https://graphviz.org/Gallery/undirected/ER.html',
-        'overlay': EntityRelationshipOverlay,
+        'overlay': EntityRelationship,
     }
 }
 
