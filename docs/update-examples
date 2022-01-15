@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+"""
+Update the examples/ directory with output from examples given
+"""
+import json
+import textwrap
+
+from graphviz_overlay.overlays import DigraphOverlay, EntityRelationshipOverlay
+from graphviz_overlay.util import load_json_file
+
+examples = {
+    'hello_world': {
+        'title': 'Hello World',
+        'url': 'https://graphviz.org/Gallery/directed/hello.html',
+        'overlay': DigraphOverlay,
+    },
+    'cluster': {
+        'title': 'Clusters',
+        'url': 'https://graphviz.org/Gallery/directed/cluster.html',
+        'overlay': DigraphOverlay,
+    },
+    'er': {
+        'title': 'Entity-Relation Data Model',
+        'url': 'https://graphviz.org/Gallery/undirected/ER.html',
+        'overlay': EntityRelationshipOverlay,
+    }
+}
+
+def main():
+    example_rsts = []
+    for example, config in examples.items():
+
+        dot_source = generate_dot_source(example, config['overlay'])
+
+        example_rsts.append(
+            format_example_rst(
+                example=example,
+                dot_source=textwrap.indent(dot_source or '', ' ' * 8),
+                title_underline=('=' * len(config['title'])),
+                **config
+            )
+        )
+
+    index_rst = content_tpl.format(
+        examples='\n'.join(example_rsts),
+    )
+    with open('examples.rst', mode='w') as f:
+        f.write(index_rst)
+
+def generate_dot_source(example, overlay):
+    filepath = f'../examples/{example}.json'
+
+    with open(filepath, mode='r') as f:
+        model = json.load(f)
+
+    o = overlay()
+    return o.draw(name='G', model=model)
+
+def format_example_rst(**kwargs):
+    return example_tpl.format(
+            **kwargs
+        )
+
+content_tpl = '''
+########
+Examples
+########
+
+Examples are inspired by https://graphviz.org/gallery/.
+
+.. contents:: Examples
+  :depth: 2
+  :local:
+
+{examples}
+'''.strip()
+
+example_tpl = '''
+{title}
+{title_underline}
+
+{url}
+
+Model:
+
+    .. graphviz::
+
+{dot_source}
+
+.. literalinclude:: ../examples/{example}.json
+    :caption: {example}.json
+
+
+Command::
+
+    $ cat examples/{example}.json | graphviz-overlay {overlay.name} > {example}.dot
+
+
+Generated source:
+
+    .. code-block::
+        :caption: {example}.dot
+
+{dot_source}
+'''
+
+if __name__ == '__main__':
+    main()

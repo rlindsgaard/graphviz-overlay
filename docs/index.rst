@@ -7,8 +7,7 @@ Welcome to graphiz-overlay's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   examples/index
-   reference
+   examples
 
 Graphviz-overlay is a templating tool for generating graphs.
 

@@ -34,6 +34,7 @@ release = '0.1.0'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.graphviz',
     'sphinx_rtd_theme',
 ]
 
