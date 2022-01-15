@@ -1,4 +1,5 @@
 import graphviz
+from graphviz_overlay import GraphContext
 
 
 class GraphOverlay(object):
@@ -18,8 +19,11 @@ class GraphOverlay(object):
         }
     }
 
-    def __init__(self, ctx, select, highlight, shade, remove_deselected):
-        self.ctx = ctx
+    def __init__(
+        self, ctx: GraphContext = None, select: str = '',
+        highlight: str = '', shade: str = '', remove_deselected=False,
+    ):
+        self.ctx = ctx or GraphContext()
         self.ctx.add_stylesheet(self.styles)
         self.selected_paths = [
             p.strip()
@@ -52,7 +56,7 @@ class GraphOverlay(object):
             },
         }
 
-    def draw(self, name, model, graph_class=graphviz.Graph):
+    def draw(self, name: str, model: dict, graph_class=graphviz.Graph) -> str:
         self.ctx.init_graph(
             name,
             graph_class,
@@ -60,6 +64,7 @@ class GraphOverlay(object):
         )
         processed_model = self.preprocess_model(model)
         self.walk_model(self.ctx, processed_model)
+        return self.ctx.source()
 
     def source(self):
         return self.ctx.source()
@@ -271,4 +276,4 @@ class DigraphOverlay(GraphOverlay):
     name = 'digraph'
 
     def draw(self, name, model):
-        super().draw(name, model, graphviz.Digraph)
+        return super().draw(name, model, graphviz.Digraph)

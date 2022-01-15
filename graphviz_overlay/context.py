@@ -1,13 +1,4 @@
-"""
-Generate a undirected graph
-"""
-from argparse import ArgumentParser, FileType
-import graphviz
-import json
-from graphviz_overlay.overlays.er import EntityRelationshipOverlay
-from graphviz_overlay.overlays.graphviz import GraphOverlay, DigraphOverlay
-import sys
-
+from graphviz_overlay.util import load_json_file
 
 valid_attrs = [
     '_background',
@@ -185,30 +176,6 @@ valid_attrs = [
 ]
 
 
-def main(opts):
-    model = load_json_file(opts.infile)
-
-    styles = load_json_file(opts.stylesheet)
-
-    ctx = GraphContext(styles)
-
-    overlay_args = {
-        arg: getattr(opts, arg)
-        for arg in opts.overlay.arguments()
-    }
-
-    overlay = opts.overlay(ctx, **overlay_args)
-    overlay.draw(opts.name, model)
-
-    print(overlay.source())
-
-
-def load_json_file(file):
-    if file:
-        return json.load(file)
-    return {}
-
-
 class GraphContext(object):
     """
     Defines a context for graph objects.
@@ -266,12 +233,12 @@ class GraphContext(object):
     }
 
     def __init__(
-        self, stylesheet: dict, path: str = '', prefix: str = '',
+        self, stylesheet: dict = None, path: str = '', prefix: str = '',
         _level: int = 0
     ):
         self.graph = None
         self.styles = self.base_styles.copy()
-        self.add_stylesheet(stylesheet)
+        self.add_stylesheet(stylesheet or {})
         self._ranks = {}
         self._level = _level
         self.prefix = prefix
@@ -506,48 +473,3 @@ def format_html_tag(tag, attrs={}, inner=''):
         if k.upper() in html_attrs[tag]
     ]
     return f"<{tag} {' '.join(tag_attrs)}>{inner}</{tag}>"
-
-
-overlays = [
-    GraphOverlay,
-    DigraphOverlay,
-    EntityRelationshipOverlay,
-]
-
-
-def run():
-    parser = ArgumentParser()
-    parser.add_argument(
-        '-n', '--name',
-        default='G',
-        help='Name of the graph')
-    parser.add_argument(
-        '-i', '--infile',
-        type=FileType(mode='r'),
-        help='Input json file',
-        default=sys.stdin
-    )
-    parser.add_argument(
-        '-s', '--stylesheet',
-        type=FileType(mode='r'),
-        default=None,
-        help='Stylesheet file',
-    )
-
-    subparsers = parser.add_subparsers(
-        title='Overlays',
-        description='The overlay that will be used to generate the graph.',
-        required=True,
-        dest='overlay',
-        help='Select the overlay to render the graph.',
-    )
-
-    for overlay in overlays:
-        subparser = subparsers.add_parser(overlay.name)
-        args = overlay.arguments()
-        for arg, params in args.items():
-            arg = arg.replace('_', '-')
-            subparser.add_argument(f'--{arg}', **params)
-        subparser.set_defaults(overlay=overlay)
-
-    main(parser.parse_args())
