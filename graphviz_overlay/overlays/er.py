@@ -1,6 +1,6 @@
-from graphviz_overlay.overlays.graphviz import GraphOverlay
+from graphviz_overlay.overlays.graphviz import Graph
 
-class EntityRelationshipOverlay(GraphOverlay):
+class EntityRelationship(Graph):
 
     name = 'er'
 

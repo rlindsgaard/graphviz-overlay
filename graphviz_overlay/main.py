@@ -27,9 +27,9 @@ def main(opts):
 
 
 overlays = [
-    overlays.GraphOverlay,
-    overlays.DigraphOverlay,
-    overlays.EntityRelationshipOverlay,
+    overlays.Graph,
+    overlays.Digraph,
+    overlays.EntityRelationship,
 ]
 
 

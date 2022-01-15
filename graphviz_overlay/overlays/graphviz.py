@@ -2,7 +2,7 @@ import graphviz
 from graphviz_overlay import GraphContext
 
 
-class GraphOverlay(object):
+class Graph(object):
     """
     Overlay generating an undirected graph.
     """
@@ -268,7 +268,7 @@ class GraphOverlay(object):
             ctx.add_rank(rank_name, rank_type)
 
 
-class DigraphOverlay(GraphOverlay):
+class Digraph(Graph):
     """
     Overlay generating a directed graph.
     """
