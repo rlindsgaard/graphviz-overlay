@@ -275,17 +275,21 @@ class GraphContext(object):
         definitions which are themselves dictionaries.
         """
         new_stylesheet = self.styles.copy()
-        for class_name, styles in stylesheet.items():
+        for class_name, attrs in stylesheet.items():
             new_class = new_stylesheet.get(class_name, {})
-            for attr, value in styles.items():
+            for attr, value in attrs.items():
                 if attr == 'style':
                     if 'style' not in new_class:
-                        new_class['style'] = value
+                        new_class['style'] = value.copy()
                     else:
-                        for v in value:
-                            if v in new_class['style']:
+                        new_value = []
+                        for v in new_class['style']:
+                            if v in value:
                                 continue
-                            new_class['style'].append(v)
+                            new_value.append(v)
+                        for v in value:
+                            new_value.append(v)
+                        new_class['style'] = new_value
                 else:
                     new_class[attr] = value
             new_stylesheet[class_name] = new_class
