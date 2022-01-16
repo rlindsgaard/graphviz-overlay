@@ -112,6 +112,55 @@ def test_add_node_with_defined_stylesheet(
     )
 
 
+html_record = {
+    'border': '1',
+    'trs': [
+        [
+            {
+                'colspan': '2',
+                'value': 'Record'
+            }
+        ],
+        [
+            {
+                'port': 'p0',
+                'value': 'key'
+            },
+            {
+                'port': 'p1',
+                'value': 'value'
+            }
+        ]
+    ]
+}
+
+
+def test_add_node_html_record(mocker):
+    attributes = {
+        'label': html_record,
+    }
+
+    gv = mocker.Mock(spec=graphviz.Graph)
+    m = mocker.Mock(return_value=gv)
+    ctx = GraphContext()
+    ctx.init_graph('G', m, {})
+    ctx.add_node(
+        'anode',
+        attributes=attributes,
+    )
+    gv.node.assert_called_once_with(
+        'anode',
+        label=(
+            '<<TABLE BORDER="1">'
+            '<TR><TD COLSPAN="2">Record</TD></TR>'
+            '<TR><TD PORT="p0">key</TD>'
+            '<TD PORT="p1">value</TD></TR>'
+            '</TABLE>>'
+        ),
+        shape='plain',
+    )
+
+
 def test_add_edge(mocker):
     gv = mocker.Mock(spec=graphviz.Graph)
     m = mocker.Mock(return_value=gv)

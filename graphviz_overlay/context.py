@@ -492,4 +492,9 @@ def format_html_tag(tag, attrs={}, inner=''):
         for k, v in attrs.items()
         if k.upper() in html_attrs[tag]
     ]
-    return f"<{tag} {' '.join(tag_attrs)}>{inner}</{tag}>"
+    log.debug(f'{tag_attrs=}')
+    html = f'<{tag}'
+    if tag_attrs:
+        html += f" {' '.join(tag_attrs)}"
+    html += f'>{inner}</{tag}>'
+    return html
