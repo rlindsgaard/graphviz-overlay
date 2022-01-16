@@ -1,5 +1,9 @@
+import copy
+import logging
+
 from graphviz_overlay.util import load_json_file
 
+log = logging.getLogger(__name__)
 valid_attrs = [
     '_background',
     'area',
@@ -237,7 +241,7 @@ class GraphContext(object):
         _level: int = 0
     ):
         self.graph = None
-        self.styles = self.base_styles.copy()
+        self.styles = copy.deepcopy(self.base_styles)
         self.add_stylesheet(stylesheet or {})
         self._ranks = {}
         self._level = _level
@@ -330,6 +334,8 @@ class GraphContext(object):
         self, node_from: str, node_to: str, attributes: dict = None,
         classes=None
     ):
+        log.info('Enter add_edge')
+
         classes = classes or []
 
         attrs = self._build_attributes(
@@ -338,6 +344,8 @@ class GraphContext(object):
             classes,
         )
 
+        log.info('Adding edge')
+        log.debug(f'{node_from=} {node_to=} {attrs=}')
         self.graph.edge(
             node_from,
             node_to,
@@ -345,7 +353,12 @@ class GraphContext(object):
         )
 
     def add_node(self, name, attributes=None, classes=None):
+        log.info('Enter add_node')
+
         classes = classes or []
+        attributes = attributes or {}
+
+        log.debug(f'{name} {attributes} {classes}')
 
         if 'rank' in attributes:
             rank_name = attributes['rank']
@@ -362,8 +375,11 @@ class GraphContext(object):
             attrs['label'] = format_html_label(attrs['label'])
             attrs['shape'] = 'plain'
 
+        node_name = self.node_id(name)
+        log.info('Adding node')
+        log.debug(f'{node_name=} {attrs=}')
         self.graph.node(
-            self.node_id(name),
+            node_name,
             **attrs
         )
 
