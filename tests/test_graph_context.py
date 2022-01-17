@@ -170,3 +170,20 @@ def test_add_edge(mocker):
     gv.edge.assert_called_once_with(
         'hello', 'world',
     )
+
+def test_add_rank(mocker):
+    # gv = mocker.Mock(spec=graphviz.Graph)
+    # m = mocker.Mock(return_value=gv)
+    ctx = GraphContext()
+    ctx.init_graph('G', graphviz.Graph, {})
+    ctx.add_node('anode', {'rank': 'myrank'})
+    ctx.add_node('anothernode', {'rank': 'myrank'})
+    ctx.add_rank('myrank', 'same')
+    expect = (
+        '{\n'
+        '\t\trank=same\n'
+        '\t\tanode\n'
+        '\t\tanothernode\n'
+        '\t}'
+    )
+    assert expect in ctx.source()

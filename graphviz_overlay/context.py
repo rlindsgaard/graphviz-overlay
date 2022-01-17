@@ -438,15 +438,19 @@ class GraphContext(object):
                 result[attr] = attrs[attr]
         return result
 
-    def add_rank(self, rank_name, rank_type):
+    def add_rank(self, rank_name: str, rank_type: str) -> ():
+        """Add rank specification to the graph
+
+        :param str rank_name: Name given the rank.
+        :param str rank_type: same, min, or max.
+        """
         rank_nodes = self._ranks.get(rank_name)
 
         fmt = '{{rank={rank_type}; {nodenames}}}'
-        self.graph.body.append(
-            fmt.format(
-                rank_type=rank_type,
-                nodenames=' '.join(rank_nodes)),
-        )
+        with self.graph.subgraph() as s:
+            s.attr(rank='same')
+            for nodename in rank_nodes:
+                s.node(nodename)
 
     def source(self):
         return self.graph.source
