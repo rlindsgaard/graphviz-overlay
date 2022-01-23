@@ -396,7 +396,7 @@ class GraphContext(object):
         Any attributes specified overrides the one supplied by
         any classes.
 
-        :param str type: The DOT element, graph, subgraph, node, edge
+        :param str element_type: The DOT element, graph, subgraph, node, edge
         :param dict attributes: (key, value) pairs. The value is
             treated as a literal.
         :param list classes: Any classes to apply defined by the stylesheet.
