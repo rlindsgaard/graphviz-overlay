@@ -446,9 +446,12 @@ class GraphContext(object):
         """
         rank_nodes = self._ranks.get(rank_name)
 
-        fmt = '{{rank={rank_type}; {nodenames}}}'
+        if rank_type not in ['same', 'min', 'max']:
+            log.warning("Rank type '%s' not valid, replacing with 'same'", rank_type)
+            rank_type = 'same'
+
         with self.graph.subgraph() as s:
-            s.attr(rank='same')
+            s.attr(rank=rank_type)
             for nodename in rank_nodes:
                 s.node(nodename)
 

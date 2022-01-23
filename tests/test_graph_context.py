@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 import graphviz
 import pytest
 
@@ -171,19 +173,37 @@ def test_add_edge(mocker):
         'hello', 'world',
     )
 
-def test_add_rank(mocker):
-    # gv = mocker.Mock(spec=graphviz.Graph)
-    # m = mocker.Mock(return_value=gv)
+
+@pytest.mark.parametrize(
+    'rank_type,expect', [
+        ('same', 'same'),
+        ('min', 'min'),
+        ('max', 'max'),
+        ('invalid', 'same')
+    ]
+)
+def test_add_rank(rank_type, expect, mocker):
+    @contextmanager
+    def cm(m):
+        try:
+            yield m
+        finally:
+            pass
+
+    gv = mocker.Mock(spec=graphviz.Graph)
+    s = mocker.Mock(spec=graphviz.Graph)
+    gv.subgraph.return_value = cm(s)
+    m = mocker.Mock(return_value=gv)
     ctx = GraphContext()
-    ctx.init_graph('G', graphviz.Graph, {})
+    ctx.init_graph('G', m, {})
     ctx.add_node('anode', {'rank': 'myrank'})
     ctx.add_node('anothernode', {'rank': 'myrank'})
-    ctx.add_rank('myrank', 'same')
-    expect = (
-        '{\n'
-        '\t\trank=same\n'
-        '\t\tanode\n'
-        '\t\tanothernode\n'
-        '\t}'
+    ctx.add_rank('myrank', rank_type)
+
+    s.attr.assert_called_once_with(rank=expect)
+    s.node.assert_has_calls(
+        [
+            mocker.call('anode'),
+            mocker.call('anothernode'),
+        ],
     )
-    assert expect in ctx.source()
