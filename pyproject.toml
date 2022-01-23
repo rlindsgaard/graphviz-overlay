@@ -7,6 +7,12 @@ license = "MIT"
 readme = "README.rst"
 repository = "https://github.com/rlindsgaard/graphviz-overlay"
 documentation = "https://graphviz-overlay.readthedocs.io"
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -25,3 +31,9 @@ graphviz-overlay = "graphviz_overlay.main:run"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "DEBUG"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
