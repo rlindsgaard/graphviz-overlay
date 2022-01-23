@@ -457,8 +457,11 @@ class GraphContext(object):
         return self.graph.source
 
 
-def format_html_label(label):
-    """Produces a graphviz html label from a dictionary."""
+def format_html_label(label: dict):
+    """Produces a graphviz html label from a dictionary.
+
+    :param label:
+    """
 
     rows = []
     for row in label['trs']:
@@ -474,7 +477,7 @@ def format_html_label(label):
     return f'<{table}>'
 
 
-def format_html_tag(tag, attrs={}, inner=''):
+def format_html_tag(tag, attrs=None, inner=''):
     html_attrs = {
         'TABLE': [
             'ALIGN', 'BGCOLOR', 'BORDER', 'CELLBORDER', 'CELLPADDING',
@@ -489,8 +492,9 @@ def format_html_tag(tag, attrs={}, inner=''):
             'HEIGHT', 'HREF', 'ID', 'PORT', 'ROWSPAN', 'SIDES',
             'STYLE', 'TARGET', 'TITLE', 'TOOLTIP', 'VALIGN',
             'WIDTH',
-        ]
+        ],
     }
+    attrs = attrs or {}
     tag = tag.upper()
     tag_attrs = [
         f'{k.upper()}="{v}"'
