@@ -1,8 +1,6 @@
 import copy
 import logging
 
-from graphviz_overlay.util import load_json_file
-
 log = logging.getLogger(__name__)
 valid_attrs = [
     '_background',
